@@ -1,0 +1,97 @@
+:root {
+    /* Цветовая палитра */
+    --color-primary: #64b5f6;
+    --color-primary-hover: #90caf9;
+    --color-secondary: #bb86fc;
+    --color-danger: #f44336;
+    --color-danger-hover: #ef5350;
+    --color-success: #4caf50;
+    --color-success-hover: #66bb6a;
+    --color-warning: #ff9800;
+    --color-warning-hover: #efa810;
+
+    --cursor-color: #000;
+    
+    /* Фоновые цвета */
+    --bg-body: #1a1a1a;
+    --bg-container: #2d2d2d;
+    --bg-section: #3d3d3d;
+    --bg-card: #353535;
+    --bg-input: #2d2d2d;
+    --bg-input-focus: #353535;
+    --bg-table: #353535;
+    --bg-table-hover: #454545;
+    --bg-code: #1a1a1a;
+    
+    /* Цвета текста */
+    --text-primary: #e0e0e0;
+    --text-secondary: #bbbbbb;
+    --text-muted: #888;
+    --text-filename: #4caf50;
+    --text-heading: #64b5f6;
+    
+    /* Цвета границ */
+    --border-primary: #64b5f6;
+    --border-secondary: #404040;
+    --border-input: #555;
+    --border-code: #404040;
+    
+    /* Тени */
+    --shadow-container: 0 0 30px rgba(0, 0, 0, 0.5);
+    --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.3);
+    --shadow-input: 0 1px 3px rgba(0, 0, 0, 0.2);
+    --shadow-input-focus: 0 0 8px rgba(100, 181, 246, 0.3);
+    --shadow-button: 0 2px 4px rgba(0, 0, 0, 0.2);
+    --shadow-button-hover: 0 4px 8px rgba(0, 0, 0, 0.3);
+    
+    /* Размеры */
+    --border-radius: 6px;
+    --border-radius-container: 10px;
+    --border-radius-input: 6px;
+    --border-radius-button: 6px;
+    --border-radius-code: 6px;
+    
+    /* Отступы */
+    --padding-container: 30px;
+    --padding-section: 20px;
+    --padding-card: 20px;
+    --padding-input: 12px;
+    --padding-button: 12px 20px;
+    --padding-table-cell: 14px 16px;
+    --padding-code: 20px;
+    --padding-tab: 10px 20px;
+    
+    /* Размеры шрифтов */
+    --font-size-base: 16px;
+    --font-size-small: 14px;
+    --font-size-xsmall: 13px;
+    --font-size-large: 1.4em;
+    --font-size-xlarge: 2.2em;
+    --font-size-code: 14px;
+    
+    /* Высота строк */
+    --line-height-base: 1.6;
+    --line-height-code: 1.5;
+    
+    /* Размеры элементов */
+    --checkbox-scale: 1.3;
+    --toggle-width: 50px;
+    --toggle-height: 24px;
+    --toggle-slider-size: 18px;
+    --scrollbar-width: 8px;
+    
+    /* Анимации */
+    --transition-fast: all 0.2s ease-out;
+    --transition-normal: all 0.3s ease-out;
+    --transition-slow: all 0.5s ease-out;
+    --animation-duration-fast: 0.2s;
+    --animation-duration-normal: 0.3s;
+    --animation-duration-slow: 0.5s;
+    
+    /* Цвета для анимаций */
+    --color-highlight: rgba(100, 181, 246, 0.2);
+    --color-success-light: rgba(76, 175, 80, 0.2);
+    
+    /* Максимальные ширины */
+    --max-width-container: 1800px;
+}

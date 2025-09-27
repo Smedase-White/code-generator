@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Генератор кода классов</title>
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Генератор кода классов</h1>
+    
+    <div class="form-section">
+      <div class="header-actions">
+        <h2>Информация о классе</h2>
+      </div>
+      <div class="class-info-form">
+        <div class="form-group">
+          <label for="className">Наименование:</label>
+          <input type="text" id="className">
+        </div>
+        <div class="form-group">
+          <label for="classNameRu">Русское имя:</label>
+          <input type="text" id="classNameRu">
+        </div>
+        <div class="form-group">
+          <label for="parentName">Имя родителя:</label>
+          <input type="text" id="parentName">
+        </div>
+      </div>
+
+      <h2>Атрибуты класса</h2>
+      
+      <table id="attributesTable">
+        <thead>
+          <tr>
+            <th>Имя</th>
+            <th>Русское имя</th>
+            <th>Тип атрибута</th>
+
+            <th>Родительский</th>
+            <th>Собственность</th>
+            <th>Обязательность</th>
+            <th>Сеттер</th>
+
+            <th>Справочный сеттер</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="attributesBody">
+          <tr class="empty-row">
+            <td colspan="9">Нет добавленных атрибутов</td>
+          </tr>
+        </tbody>
+        <tfoot>
+          <tr>
+            <td colspan="1">
+              <button id="addAttribute" class="btn btn-success">Добавить атрибут</button>
+            </td>
+          </tr>
+        </tfoot>
+      </table>
+
+      <h2>Действия</h2>
+
+      <div class="data-actions">
+        <button id="saveData" class="btn btn-success">Сохранить данные</button>
+        <button id="loadData" class="btn btn-primary">Загрузить данные</button>
+        <button id="clearData" class="btn btn-warning">Очистить все данные</button>
+      </div>
+    </div>
+    
+    <div class="code-section">
+      <div class="code-header">
+        <h2>Сгенерированный код</h2>
+        <button id="generateCode" class="btn btn-success">Сгенерировать код</button>
+        <div class="code-type-selector">
+          <label for="codeType">Тип кода:</label>
+          <select id="codeType">
+            <option value="lua">Lua код</option>
+            <option value="json">JSON запрос</option>
+            <option value="doc" disabled>Документация (скоро)</option>
+          </select>
+        </div>
+      </div>
+      <div class="filename-section">
+        <span class="filename-label">Имя файла:</span>
+        <span id="fileName" class="filename"></span>
+      </div>
+      <pre id="generatedCode">Код появится здесь после нажатия кнопки "Сгенерировать код"</pre>
+    </div>
+  </div>
+
+  <!-- Скрытый input для загрузки файлов -->
+  <input type="file" id="fileInput" accept=".json" style="display: none;">
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
