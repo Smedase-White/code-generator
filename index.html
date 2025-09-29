@@ -13,54 +13,120 @@
     
     <div class="form-section">
       <div class="header-actions">
-        <h2>Информация о классе</h2>
+        <h2>Тип класса</h2>
       </div>
-      <div class="class-info-form">
-        <div class="form-group">
-          <label for="className">Наименование:</label>
-          <input type="text" id="className">
-        </div>
-        <div class="form-group">
-          <label for="classNameRu">Русское имя:</label>
-          <input type="text" id="classNameRu">
-        </div>
-        <div class="form-group">
-          <label for="parentName">Имя родителя:</label>
-          <input type="text" id="parentName">
-        </div>
+      <div class="selector">
+        <label for="classType">Тип класса:</label>
+        <select id="classType">
+          <option value="base">Базовый</option>
+          <option value="dictionary">Справочник и запись</option>
+        </select>
       </div>
 
-      <h2>Атрибуты класса</h2>
-      
-      <table id="attributesTable">
-        <thead>
-          <tr>
-            <th>Имя</th>
-            <th>Русское имя</th>
-            <th>Тип атрибута</th>
+      <!-- Форма для базового класса -->
+      <div id="baseClassForm" class="class-form">
+        <div class="header-actions">
+          <h2>Информация о классе</h2>
+        </div>
+        <div class="class-info-form">
+          <div class="form-group">
+            <label for="className">Наименование:</label>
+            <input type="text" id="className">
+          </div>
+          <div class="form-group">
+            <label for="classNameRu">Русское имя:</label>
+            <input type="text" id="classNameRu">
+          </div>
+          <div class="form-group">
+            <label for="parentName">Имя родителя:</label>
+            <input type="text" id="parentName">
+          </div>
+        </div>
 
-            <th>Родительский</th>
-            <th>Собственность</th>
-            <th>Обязательность</th>
-            <th>Сеттер</th>
+        <h2>Атрибуты класса</h2>
+        
+        <table id="attributesTable">
+          <thead>
+            <tr>
+              <th>Имя</th>
+              <th>Русское имя</th>
+              <th>Тип атрибута</th>
+              <th>Родительский</th>
+              <th>Собственность</th>
+              <th>Обязательность</th>
+              <th>Сеттер</th>
+              <th>Основа спр. сеттера</th>
+              <th>Атрибут спр. сеттера</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="baseAttributesBody"></tbody>
+          <tfoot>
+            <tr>
+              <td colspan="1">
+                <button id="addBaseAttribute" class="btn btn-success">Добавить атрибут</button>
+              </td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
 
-            <th>Справочный сеттер</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody id="attributesBody">
-          <tr class="empty-row">
-            <td colspan="9">Нет добавленных атрибутов</td>
-          </tr>
-        </tbody>
-        <tfoot>
-          <tr>
-            <td colspan="1">
-              <button id="addAttribute" class="btn btn-success">Добавить атрибут</button>
-            </td>
-          </tr>
-        </tfoot>
-      </table>
+      <!-- Форма для справочника и записи -->
+      <div id="dictionaryForm" class="class-form" style="display: none;">
+        <div class="header-actions">
+          <h2>Информация о справочнике</h2>
+        </div>
+        <div class="class-info-form">
+          <div class="form-group">
+            <label for="dictBase">Основа справочника:</label>
+            <input type="text" id="dictBase">
+          </div>
+          <div class="form-group">
+            <label for="dictNameRu">Русское имя:</label>
+            <input type="text" id="dictNameRu">
+          </div>
+        </div>
+
+        <h2>Атрибуты записи</h2>
+        
+        <table id="recordAttributesTable">
+          <thead>
+            <tr>
+              <th>Имя</th>
+              <th>Русское имя</th>
+              <th>Тип атрибута</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="recordAttributesBody"></tbody>
+          <tfoot>
+            <tr>
+              <td colspan="1">
+                <button id="addRecordAttribute" class="btn btn-success">Добавить атрибут</button>
+              </td>
+            </tr>
+          </tfoot>
+        </table>
+
+        <table id="recordValuesTable">
+          <thead>
+            <tr>
+              <th>Ключ</th>
+              <th>Русское имя</th>
+              <th>JSON значений</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="recordValuesBody"></tbody>
+          <tfoot>
+            <tr>
+              <td colspan="1">
+                <button id="addRecordValue" class="btn btn-success">Добавить значение</button>
+              </td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
 
       <h2>Действия</h2>
 
@@ -75,7 +141,7 @@
       <div class="code-header">
         <h2>Сгенерированный код</h2>
         <button id="generateCode" class="btn btn-success">Сгенерировать код</button>
-        <div class="code-type-selector">
+        <div class="selector">
           <label for="codeType">Тип кода:</label>
           <select id="codeType">
             <option value="lua">Lua код</option>

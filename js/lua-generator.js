@@ -1,6 +1,19 @@
-import { getAutoImports } from './utils.js';
-
 export class LuaGenerator {
+  getAutoImports(attributes) {
+    const imports = new Set();
+    
+    attributes.forEach(attr => {
+      if (attr.type && attr.type.trim()) {
+        imports.add(attr.type.trim());
+      }
+      if (attr.dictionaryBase && attr.dictionaryBase.trim()) {
+        imports.add('Dictionary');
+      }
+    });
+    
+    return Array.from(imports).sort();
+  }
+
   generateImportString(className) {
     return `local ${className} = BaseClass:require('${className}')`;
   }
@@ -15,7 +28,12 @@ export class LuaGenerator {
     return schema;
   }
 
-  generateLuaCode(className, classNameRu, parentName, attributes) {
+  generateLuaCode(codeInfo) {
+    const className = codeInfo.className;
+    const classNameRu = codeInfo.classNameRu;
+    const parentName = codeInfo.parentName;
+    const attributes = codeInfo.attributes;
+
     let code = `--ignore_migrations\n`;
     code += `--${classNameRu}\n`;
     
@@ -23,7 +41,7 @@ export class LuaGenerator {
       code += `${this.generateImportString(parentName)}\n\n`
     }
 
-    const imports = getAutoImports(attributes);
+    const imports = this.getAutoImports(attributes);
     if (imports.length > 0) {
       code += imports.map(importClass => `${this.generateImportString(importClass)}`).join('\n')
       code += `\n\n`
@@ -37,7 +55,7 @@ export class LuaGenerator {
       code += `\n})\n\n`;
     }
     
-    const newAttributes = attributes.filter(attr => attr.fromParent == false);
+    const newAttributes = attributes.filter(attr => !attr.fromParent);
     if (newAttributes.length > 0) {
       code += `${className}:initialize_schema({\n`;
       code += `  attributes = {`;
@@ -53,40 +71,42 @@ export class LuaGenerator {
       code += ` })\n\n`;
     }
     
-    const dictionarySetters = attributes.filter(attr => attr.dictionaryBase.trim());
+    const dictionarySetters = attributes.filter(attr => attr.dictionaryBase && attr.dictionaryBase.trim());
     if (dictionarySetters.length > 0) {
       code += `Dictionary:generate_setters_from_dictionaries(${className}, {`;
       code += dictionarySetters.map(attr => `\n  ${attr.name} = "${attr.dictionaryBase}Dictionary.%s<${attr.dictionaryBase}Record>.${attr.dictionaryAttr}<${attr.type}>"`).join(',')
       code += `\n})\n\n`;
     }
     
-    code += `function ${className}.static:initialize_from_table(data)\n`;
+    if (newAttributes.length > 0) {
+      code += `function ${className}:initialize_from_table(data)\n`;
 
-    const requiredAttributes = newAttributes.filter(attr => attr.required);
-    if (requiredAttributes.length > 0) {
-      code += requiredAttributes.map(attr => `  Utils:key_exists(data, '${attr.name}')`).join('\n')
-      code += '\n'
-    }
-
-    if (parentName && parentName.trim()) {
-      code += `  local instance = ${parentName}.initialize_from_table(self, data)\n`;
-    } else {
-      code += `  local instance = self:initialize_default()\n`;
-    }
-    code += `\n`;
-    
-    newAttributes.forEach(attr => {
-      if (attr.name) {
-        if (attr.hasStandardSetter) {
-          code += `  instance:set_${attr.name}(data.${attr.name})\n`;
-        } else {
-          code += `  instance.${attr.name} = data.${attr.name}\n`;
-        }
+      const requiredAttributes = newAttributes.filter(attr => attr.required);
+      if (requiredAttributes.length > 0) {
+        code += requiredAttributes.map(attr => `  Utils:key_exists(data, '${attr.name}')`).join('\n')
+        code += '\n\n'
       }
-    });
-    
-    code += `\n  return instance\n`;
-    code += `end\n\n`;
+
+      if (parentName && parentName.trim()) {
+        code += `  local instance = ${parentName}.initialize_from_table(self, data)\n`;
+      } else {
+        code += `  local instance = self:initialize_default()\n`;
+      }
+      code += `\n`;
+      
+      newAttributes.forEach(attr => {
+        if (attr.name) {
+          if (attr.hasStandardSetter) {
+            code += `  instance:_set_${attr.name}(data.${attr.name})\n`;
+          } else {
+            code += `  instance.${attr.name} = data.${attr.name}\n`;
+          }
+        }
+      });
+      
+      code += `\n  return instance\n`;
+      code += `end\n\n`;
+    }
     
     code += `return ${className}`;
     

@@ -38,4 +38,55 @@ export class JsonGenerator {
     
     return JSON.stringify(jsonRequest, null, 2);
   }
+
+  generateDictionaryRequest(info) {
+    const attributeTypes = {};
+    info.recordAttributes.forEach(attr => {
+      attributeTypes[attr.name] = attr.type;
+    });
+
+    const values = info.recordValues.map(record => {
+      let mapData = JSON.parse(record.map);
+      
+      const valueObject = {};
+      Object.keys(mapData).forEach(attrName => {
+        const attrType = attributeTypes[attrName];
+        if (attrType) {
+          valueObject[attrName] = {
+            "object": attrType,
+            "method_name": "initialize_from_table",
+            "parameters": {
+              "value": mapData[attrName]
+            }
+          };
+        }
+      });
+      
+      return {
+        "key": record.key,
+        "value": valueObject,
+        "schema": {
+          "name_ru": record.nameRu,
+          "self_attr": true
+        }
+      };
+    });
+
+    const result = {
+      "object": `${info.dictBase}Dictionary`,
+      "method_name": "initialize_from_table",
+      "parameters": {
+        "dictionary_name": {
+          "object": "TextAttr",
+          "method_name": "initialize_from_table",
+          "parameters": {
+            "value": `Справочник '${info.dictNameRu}'`
+          }
+        },
+        "values": values
+      }
+    };
+
+    return  JSON.stringify(result, null, 2);
+  }
 }
