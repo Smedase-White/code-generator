@@ -1,43 +1,78 @@
-import { animateNewRow, animateDeleteRow, showNotification } from './animation.js';
+import { animateNewRow, animateDeleteRow, showNotification, animateButton } from './animation.js';
 
 class DataValue {
   constructor(element, storage_key) {
     this.element = element;
     this.storage_key = storage_key;
-    if (this.storage_key) { this.value = localStorage.getItem(this.storage_key); }
-
-    if (this.value) { this.element.value = this.value; }
-    this.element.onchange = () => {
-      this.value = this.element.value;
-      localStorage.setItem(this.storage_key, this.value);
+    if (this.storage_key) { 
+      this.value = localStorage.getItem(this.storage_key); 
     }
+
+    if (this.value) { 
+      this.element.value = this.value; 
+    }
+    
+    this.element.addEventListener('change', () => {
+      this.value = this.element.value;
+      if (this.storage_key) {
+        localStorage.setItem(this.storage_key, this.value);
+      }
+    });
+
+    this.element.addEventListener('focus', () => {
+      this.element.parentElement.style.transform = 'translateY(-2px)';
+    });
+    
+    this.element.addEventListener('blur', () => {
+      this.element.parentElement.style.transform = 'translateY(0)';
+    });
   }
 
   updateValue(value) {
     this.value = value ? value : '';
     this.element.value = this.value;
-    localStorage.setItem(this.storage_key, this.value);
+    if (this.storage_key) {
+      localStorage.setItem(this.storage_key, this.value);
+    }
   }
 }
 
 class RowElementValue {
   constructor(row, column, type, value) {
     this.row = row;
-    this.column = column
+    this.column = column;
     
     const td = document.createElement('td');
-    this.element = document.createElement('input');
-    this.element.type = type;
-    if (type === 'text'){
+    
+    if (type === 'text') {
+      this.element = document.createElement('input');
+      this.element.type = 'text';
       this.element.value = value ? value : '';
-      this.element.onchange = () => { this.row.updateElement(this.column, this.element.value); }
+      this.element.placeholder = this.getPlaceholder(column);
+      
+      this.element.addEventListener('change', () => { 
+        this.row.updateElement(this.column, this.element.value); 
+      });
 
-      td.appendChild(this.element)
+      this.element.addEventListener('focus', () => {
+        td.style.transform = 'translateY(-1px)';
+      });
+      
+      this.element.addEventListener('blur', () => {
+        td.style.transform = 'translateY(0)';
+      });
+
+      td.appendChild(this.element);
+      
     } else if (type === 'checkbox') {
+      this.element = document.createElement('input');
+      this.element.type = 'checkbox';
       this.element.checked = !!value;
-      this.element.onchange = () => {
+      
+      this.element.addEventListener('change', () => {
         this.row.updateElement(this.column, this.element.checked);
-      }
+        animateButton(this.element);
+      });
 
       const wrapper = document.createElement('label');
       wrapper.className = 'toggle-switch';
@@ -45,10 +80,24 @@ class RowElementValue {
       span.className = 'toggle-slider';
       wrapper.append(this.element, span);
 
-      td.className = 'checkbox-cell'
+      td.className = 'checkbox-cell';
       td.appendChild(wrapper);
     }
+    
     this.row.element.appendChild(td);
+  }
+
+  getPlaceholder(column) {
+    const placeholders = {
+      name: 'attribute_name',
+      nameRu: 'Имя атрибута',
+      type: 'AttrType',
+      dictionaryBase: 'DictBase',
+      dictionaryAttr: 'attribute_name',
+      key: 'key',
+      map: '{"attr": "value"}'
+    };
+    return placeholders[column] || '';
   }
 }
 
@@ -57,19 +106,23 @@ class TableRow {
     this.table = table;
 
     this.element = document.createElement('tr');
+    
     Object.entries(columns).forEach(([column, data]) => {
       new RowElementValue(this, column, data.type, data.value);
-    })
+    });
 
     const deleteTd = document.createElement('td');
-    deleteTd.className = 'actions'
+    deleteTd.className = 'actions';
     const deleteBtn = document.createElement('button');
-    deleteBtn.className = 'btn btn-danger'
-    deleteBtn.onclick = () => {
+    deleteBtn.className = 'btn btn-danger';
+    deleteBtn.innerHTML = '✖';
+    
+    deleteBtn.addEventListener('click', () => {
+      animateButton(deleteBtn);
       const index = this.table.rows.indexOf(this);
       this.table.deleteRow(index);
-    }
-    deleteBtn.textContent = '✖'
+    });
+    
     deleteTd.appendChild(deleteBtn);
     this.element.appendChild(deleteTd);
 
@@ -91,14 +144,16 @@ export class TableValue {
 
     this.rows = [];
     this.value = [];
+    
     try {
       let value = JSON.parse(localStorage.getItem(this.storage_key)) || [];
-      value.forEach((row) => { this.addRow(row); })
+      value.forEach((row) => { this.addRow(row); });
     } catch (e) {
       console.error('Error parsing stored table data:', e);
     }
 
-     button_element.addEventListener('click', () => {
+    button_element.addEventListener('click', () => {
+      animateButton(button_element);
       this.addRow({});
     });
   }
@@ -108,16 +163,19 @@ export class TableValue {
   }
 
   addRow(values) {
-    this.value.push(values)
+    this.value.push(values);
     this.saveToStorage();
 
     let data = {};
     Object.entries(this.columns).forEach(([column, type]) => {
       data[column] = { type: type, value: values[column] };
-    })
+    });
+    
     const row = new TableRow(this, data);
     this.rows.push(row);
     animateNewRow(row.element);
+    
+    showNotification('Добавлена новая строка', 'success');
   }
 
   deleteRow(index) {
@@ -126,23 +184,29 @@ export class TableValue {
 
     let row = this.rows.splice(index, 1)[0];
     animateDeleteRow(row.element);
+    
+    showNotification('Строка удалена', 'warning');
   }
 
   updateValue(value) {
     this.value.length = 0;
-    this.rows.forEach((row) => {row.element.remove();});
+    this.rows.forEach((row) => { row.element.remove(); });
     this.rows.length = 0;
-    if (value) { value.forEach((row) => { this.addRow(row); }); }
+    
+    if (value) { 
+      value.forEach((row) => { this.addRow(row); }); 
+    }
+    
     this.saveToStorage();
   }
 }
 
 export class Data {
   constructor(elements) {
-    this.elements = elements
+    this.elements = elements;
 
     this.data = {
-      classType: new DataValue(elements.classTypeSelect, elements.addBaseAttributeBtn, 'luaGenerator_classType'),
+      classType: new DataValue(elements.classTypeSelect, 'luaGenerator_classType'),
 
       className: new DataValue(elements.classNameInput, 'luaGenerator_className'),
       classNameRu: new DataValue(elements.classNameRuInput, 'luaGenerator_classNameRu'),
@@ -173,9 +237,12 @@ export class Data {
       }),
 
       codeType: new DataValue(elements.codeTypeSelect, 'luaGenerator_codeType')
-    }
+    };
 
-    this.data.classType.element.addEventListener('change', () => { this.updateForm(); });
+    this.data.classType.element.addEventListener('change', () => { 
+      this.updateForm(); 
+    });
+    
     this.updateForm();
   }
 
@@ -222,6 +289,7 @@ export class Data {
     
     const selfData = this.data;
     const reader = new FileReader();
+    
     reader.onload = function(e) {
       try {
         const data = JSON.parse(e.target.result);
@@ -231,7 +299,11 @@ export class Data {
         }
         
         if (confirm('Загрузить данные из файла? Текущие данные будут потеряны.')) {
-          Object.entries(data).forEach(([key, value]) => { selfData[key].updateValue(value); });
+          Object.entries(data).forEach(([key, value]) => { 
+            if (selfData[key]) {
+              selfData[key].updateValue(value); 
+            }
+          });
           showNotification('Данные успешно загружены из файла', 'success');
         }
       } catch (error) {
@@ -249,8 +321,11 @@ export class Data {
   }
 
   clear() {
-    Object.keys(this.data).forEach((key) => { this.data[key].updateValue(undefined); });
-
-    showNotification('Все данные успешно очищены', 'success');
+    if (confirm('Вы уверены, что хотите очистить все данные?')) {
+      Object.keys(this.data).forEach((key) => { 
+        this.data[key].updateValue(undefined); 
+      });
+      showNotification('Все данные успешно очищены', 'success');
+    }
   }
 }

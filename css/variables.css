@@ -12,6 +12,11 @@
 
     --cursor-color: #000;
     
+    /* Градиенты для фона */
+    --gradient-1: #64b5f6;
+    --gradient-2: #bb86fc;
+    --gradient-3: #4caf50;
+    
     /* Фоновые цвета */
     --bg-body: #1a1a1a;
     --bg-container: #2d2d2d;
@@ -39,10 +44,11 @@
     /* Тени */
     --shadow-container: 0 0 30px rgba(0, 0, 0, 0.5);
     --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.3);
+    --shadow-card-hover: 0 8px 25px rgba(0, 0, 0, 0.4);
     --shadow-input: 0 1px 3px rgba(0, 0, 0, 0.2);
     --shadow-input-focus: 0 0 8px rgba(100, 181, 246, 0.3);
     --shadow-button: 0 2px 4px rgba(0, 0, 0, 0.2);
-    --shadow-button-hover: 0 4px 8px rgba(0, 0, 0, 0.3);
+    --shadow-button-hover: 0 4px 12px rgba(0, 0, 0, 0.3);
     
     /* Размеры */
     --border-radius: 6px;
@@ -87,6 +93,11 @@
     --animation-duration-fast: 0.2s;
     --animation-duration-normal: 0.3s;
     --animation-duration-slow: 0.5s;
+    
+    /* Кривые анимации */
+    --ease-out-quad: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    --ease-out-back: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    --ease-in-out-back: cubic-bezier(0.68, -0.55, 0.265, 1.55);
     
     /* Цвета для анимаций */
     --color-highlight: rgba(100, 181, 246, 0.2);

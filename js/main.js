@@ -1,7 +1,9 @@
 import { LuaGenerator } from './lua-generator.js';
 import { JsonGenerator } from './json-generator.js';
-import { typeWriterWithClear } from './animation.js';
+import { typeWriterWithClear, animateButton, createParallaxBackground } from './animation.js';
 import { Data } from './data.js';
+
+createParallaxBackground();
 
 const elements = {
   classTypeSelect: document.getElementById('classType'),
@@ -38,30 +40,42 @@ const luaGenerator = new LuaGenerator();
 const jsonGenerator = new JsonGenerator();
 
 function get_snake_case(value) {
-  return value.replace(/([a-z])([A-Z])/g, '$1_$2').toLowerCase();
+  return value ? value.replace(/([a-z])([A-Z])/g, '$1_$2').toLowerCase() : '';
 }
 
 function setupEventListeners() {
-  elements.clearDataBtn.addEventListener('click', () => { data.clear(); });
-  elements.saveDataBtn.addEventListener('click', () => { data.saveToFile(); } );
-  elements.loadDataBtn.addEventListener('click', () => elements.fileInput.click());
-  elements.fileInput.addEventListener('change', (event) => { data.loadFromFile(event) });
+  elements.clearDataBtn.addEventListener('click', () => { 
+    animateButton(elements.clearDataBtn);
+    data.clear(); 
+  });
+  
+  elements.saveDataBtn.addEventListener('click', () => { 
+    animateButton(elements.saveDataBtn);
+    data.saveToFile(); 
+  });
+  
+  elements.loadDataBtn.addEventListener('click', () => {
+    animateButton(elements.loadDataBtn);
+    elements.fileInput.click();
+  });
+  
+  elements.fileInput.addEventListener('change', (event) => { 
+    data.loadFromFile(event);
+  });
 
   elements.generateCodeBtn.addEventListener('click', generateCode);
 }
 
 function generateCode() {
-  elements.generateCodeBtn.classList.add('btn-pulse');
-  setTimeout(() => {
-    elements.generateCodeBtn.classList.remove('btn-pulse');
-  }, 500);
+  animateButton(elements.generateCodeBtn);
 
   const info = data.getValue();
-  let fileName = ''
+
+  let fileName = '';
   if (info.codeType === 'json') {
     fileName = 'request.json';
   } else if (info.classType === 'dictionary' && info.codeType === 'lua') {
-    const name = get_snake_case(info.dictBase)
+    const name = get_snake_case(info.dictBase);
     fileName = `${name}_dictionary.lua | ${name}_record.lua`;
   } else {
     fileName = `${get_snake_case(info.className)}.lua`;
@@ -70,30 +84,33 @@ function generateCode() {
   
   let generatedCode = '';
   
-  console.log(info.codeType);
   if (info.codeType === 'lua') {
     if (info.classType === 'dictionary') {
       Object.values(info.recordAttributes).forEach((value) => {
         value.selfAttr = true;
         value.required = true;
       });
-      info.recordAttributes.unshift({
-        name: 'dictionary_owner',
-        type: `${info.dictBase}Dictionary`,
-        fromParent: true
-      });
+      
       const dictCodeInfo = {
         className: `${info.dictBase}Dictionary`,
         classNameRu: `Справочник "${info.dictNameRu}"`,
         parentName: 'Dictionary',
         attributes: [ { name: '__values_type', type: `${info.dictBase}Record`, fromParent: true } ]
-      }
+      };
+      
+      let recordAttributes = [...info.recordAttributes]
+      recordAttributes.unshift({
+        name: 'dictionary_owner',
+        type: `${info.dictBase}Dictionary`,
+        fromParent: true
+      });
       const recordCodeInfo = {
         className: `${info.dictBase}Record`,
         classNameRu: `Запись справочника "${info.dictNameRu}"`,
         parentName: 'BaseRecord',
-        attributes: info.recordAttributes
-      }
+        attributes: recordAttributes
+      };
+      
       generatedCode = `<=== ${get_snake_case(info.dictBase)}_dictionary.lua ===>\n${luaGenerator.generateLuaCode(dictCodeInfo)}\n\n<=== ${get_snake_case(info.dictBase)}_record.lua ===>\n${luaGenerator.generateLuaCode(recordCodeInfo)}`;
     } else {
       const baseCodeInfo = {
@@ -101,7 +118,7 @@ function generateCode() {
         classNameRu: info.classNameRu,
         parentName: info.parentName,
         attributes: info.baseAttributes
-      }
+      };
       generatedCode = luaGenerator.generateLuaCode(baseCodeInfo);
     }
   } else if (info.codeType === 'json') {
