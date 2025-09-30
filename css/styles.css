@@ -450,11 +450,38 @@ input[type="checkbox"] {
 }
 
 .filename {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.filename-part {
+    position: relative;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: var(--border-radius-input);
+    transition: var(--transition-normal);
     font-family: 'Courier New', Courier, monospace;
-    color: var(--text-filename);
     font-weight: 600;
     font-size: 15px;
-    animation: filenamePulse 2s ease-in-out infinite;
+    background: var(--bg-input);
+    color: var(--text-filename);
+    border: 1px solid transparent;
+}
+
+.filename-part:hover {
+  background: var(--color-copy-hover);
+  color: var(--bg-body);
+  transform: translateY(-1px);
+}
+
+.filename-part.copied {
+  background: var(--color-success);
+  color: var(--text-primary);
+}
+
+.filename-part:active {
+  transform: translateY(0);
 }
 
 pre {
@@ -469,14 +496,14 @@ pre {
     color: var(--text-primary);
     border: 1px solid var(--border-code);
     font-size: var(--font-size-code);
-    min-height: 350px;
+    min-height: 150px;
     transition: all 0.4s var(--ease-out-quad);
     position: relative;
 }
 
 pre.typing {
     position: relative;
-    min-height: 200px;
+    min-height: 100px;
     background: linear-gradient(90deg, var(--bg-code) 0%, var(--bg-container) 100%);
 }
 
@@ -486,6 +513,50 @@ pre.typing::after {
     font-weight: bold;
     margin-left: 2px;
     animation: cursorBlink 1s infinite;
+}
+
+.code-section {
+    position: relative;
+    margin-bottom: 15px;
+}
+
+.code-header-tag {
+    display: block;
+    background: var(--bg-input);
+    color: var(--text-filename);
+    padding: 8px 12px;
+    border-radius: var(--border-radius) var(--border-radius) 0 0;
+    font-weight: bold;
+    cursor: pointer;
+    transition: var(--transition-normal);
+    user-select: none;
+    position: relative;
+}
+
+.code-header-tag:hover {
+    background: var(--color-copy-hover);
+    color: var(--bg-body);
+    padding-left: 20px;
+}
+
+.code-header-tag.copied {
+  background: var(--color-success);
+  color: var(--text-primary);
+}
+
+.code-content {
+    background: var(--bg-code);
+    padding: var(--padding-code);
+    border-radius: 0 0 var(--border-radius) var(--border-radius);
+    overflow-x: auto;
+    margin: 0;
+    border: 1px solid var(--border-code);
+    border-top: none;
+}
+
+.code-content.highlight {
+    background: var(--color-highlight);
+    animation: highlightFade 2s var(--ease-out-quad);
 }
 
 /* ===== NOTIFICATIONS ===== */
@@ -756,4 +827,9 @@ pre.typing::after {
     h1 {
         font-size: 1.8em;
     }
+}
+
+@keyframes highlightFade {
+    0% { background: var(--color-success-light); }
+    100% { background: var(--bg-code); }
 }

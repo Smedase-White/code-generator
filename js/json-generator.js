@@ -36,7 +36,7 @@ export class JsonGenerator {
       "parameters": parameters
     };
     
-    return JSON.stringify(jsonRequest, null, 2);
+    return `<=== ${className} ===>${JSON.stringify(jsonRequest, null, 2)}`;
   }
 
   generateDictionaryRequest(info) {
@@ -87,6 +87,6 @@ export class JsonGenerator {
       }
     };
 
-    return  JSON.stringify(result, null, 2);
+    return `<=== ${info.dictBase}Dictionary ===>${JSON.stringify(result, null, 2)}`;
   }
 }

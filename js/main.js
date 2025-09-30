@@ -1,6 +1,6 @@
 import { LuaGenerator } from './lua-generator.js';
 import { JsonGenerator } from './json-generator.js';
-import { typeWriterWithClear, animateButton, createParallaxBackground } from './animation.js';
+import { typeWriterWithClear, animateButton, createParallaxBackground, showNotification } from './animation.js';
 import { Data } from './data.js';
 
 createParallaxBackground();
@@ -80,7 +80,7 @@ function generateCode() {
   } else {
     fileName = `${get_snake_case(info.className)}.lua`;
   }
-  elements.fileNameSpan.textContent = fileName;
+  updateFileNameDisplay(fileName);
   
   let generatedCode = '';
   
@@ -111,7 +111,7 @@ function generateCode() {
         attributes: recordAttributes
       };
       
-      generatedCode = `<=== ${get_snake_case(info.dictBase)}_dictionary.lua ===>\n${luaGenerator.generateLuaCode(dictCodeInfo)}\n\n<=== ${get_snake_case(info.dictBase)}_record.lua ===>\n${luaGenerator.generateLuaCode(recordCodeInfo)}`;
+      generatedCode = `${luaGenerator.generateLuaCode(dictCodeInfo)}${luaGenerator.generateLuaCode(recordCodeInfo)}`;
     } else {
       const baseCodeInfo = {
         className: info.className,
@@ -134,14 +134,166 @@ function generateCode() {
     generatedCode = 'Документация пока не реализована';
   }
 
-  typeWriterWithClear(elements.generatedCodePre, generatedCode, 1, () => {
+  const formattedCode = formatGeneratedCode(generatedCode);
+  elements.generatedCodePre.innerHTML = '';
+  elements.generatedCodePre.appendChild(formattedCode);
+
+  /*typeWriterWithClear(elements.generatedCodePre, formattedCode, 1, () => {
     elements.generatedCodePre.classList.add('code-appear');
     setTimeout(() => {
       elements.generatedCodePre.classList.remove('code-appear');
     }, 500);
+  });*/
+}
+
+function setupCopyFunctionality() {
+  document.addEventListener('click', (e) => {
+    if (e.target.classList.contains('filename-part')) {
+      const filename = e.target.getAttribute('data-filename');
+      if (filename) {
+        copyToClipboard(filename, e.target);
+        showNotification(`Имя файла '${filename}' скопировано в буфер обмена.`, 'success');
+      }
+    }
   });
+
+  document.addEventListener('click', (e) => {
+    if (e.target.classList.contains('code-header-tag')) {
+      const codeSection = e.target.nextElementSibling;
+      if (codeSection && codeSection.classList.contains('code-content')) {
+        const codeText = codeSection.textContent;
+        copyToClipboard(codeText, e.target);
+        showNotification(`Код класса '${e.target.getAttribute('data-title')}' скопирован в буфер обмена.`, 'success');
+        
+        codeSection.classList.add('highlight');
+        e.target.classList.add('copied');
+        setTimeout(() => {
+          codeSection.classList.remove('highlight');
+          e.target.classList.remove('copied');
+        }, 1000);
+      }
+    }
+  });
+}
+
+function copyToClipboard(text, element) {
+  navigator.clipboard.writeText(text).then(() => {
+    element.classList.add('copied');
+    setTimeout(() => {
+      element.classList.remove('copied');
+    }, 1000);
+  }).catch(err => {
+    console.error('Ошибка копирования: ', err);
+    const textArea = document.createElement('textarea');
+    textArea.value = text;
+    document.body.appendChild(textArea);
+    textArea.select();
+    document.execCommand('copy');
+    document.body.removeChild(textArea);
+    
+    element.classList.add('copied');
+    setTimeout(() => {
+      element.classList.remove('copied');
+    }, 1000);
+  });
+}
+
+function updateFileNameDisplay(fileName) {
+  const fileNameElement = document.getElementById('fileName');
+  fileNameElement.innerHTML = '';
+  
+  if (fileName.includes('|')) {
+    const parts = fileName.split('|').map(part => part.trim());
+    parts.forEach((part, index) => {
+      const span = document.createElement('span');
+      span.className = 'filename-part';
+      span.setAttribute('data-filename', part);
+      span.textContent = part;
+      fileNameElement.appendChild(span);
+      
+      if (index < parts.length - 1) {
+        const separator = document.createElement('span');
+        separator.textContent = ' | ';
+        separator.style.color = 'var(--text-muted)';
+        fileNameElement.appendChild(separator);
+      }
+    });
+  } else {
+    const span = document.createElement('span');
+    span.className = 'filename-part';
+    span.setAttribute('data-filename', fileName);
+    span.textContent = fileName;
+    fileNameElement.appendChild(span);
+  }
+}
+
+function formatGeneratedCode(code) {
+  const sectionRegex = /<===([^=]+)===>/g;
+  let lastIndex = 0;
+  let sections = [];
+  let match;
+  
+  while ((match = sectionRegex.exec(code)) !== null) {
+    if (match.index > lastIndex) {
+      sections.push({
+        type: 'content',
+        content: code.substring(lastIndex, match.index)
+      });
+    }
+    
+    const title = match[1].trim();
+    sections.push({
+      type: 'header',
+      content: match[0],
+      title: title
+    });
+    
+    lastIndex = match.index + match[0].length;
+  }
+  
+  if (lastIndex < code.length) {
+    sections.push({
+      type: 'content',
+      content: code.substring(lastIndex)
+    });
+  }
+  
+  const container = document.createElement('div');
+  let currentContent = '';
+  
+  sections.forEach((section, index) => {
+    if (section.type === 'header') {
+      if (currentContent) {
+        const contentDiv = document.createElement('pre');
+        contentDiv.className = 'code-content';
+        contentDiv.textContent = currentContent;
+        container.appendChild(contentDiv);
+        container.appendChild(document.createElement('br'))
+        currentContent = '';
+      }
+      
+      const header = document.createElement('div');
+      header.className = 'code-header-tag';
+      header.textContent = section.content;
+      header.setAttribute('data-title', section.title);
+      container.appendChild(header);
+    } else {
+      currentContent += section.content;
+    }
+  });
+  
+  if (currentContent) {
+    const contentDiv = document.createElement('pre');
+    contentDiv.className = 'code-content';
+    contentDiv.textContent = currentContent;
+    container.appendChild(contentDiv);
+  }
+  
+  
+  return container;
 }
 
 document.addEventListener('DOMContentLoaded', () => {
   setupEventListeners();
+  setupCopyFunctionality(); 
 });

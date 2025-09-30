@@ -34,7 +34,8 @@ export class LuaGenerator {
     const parentName = codeInfo.parentName;
     const attributes = codeInfo.attributes;
 
-    let code = `--ignore_migrations\n`;
+    let code = `<=== ${className} ===>`
+    code += `--ignore_migrations\n`;
     code += `--${classNameRu}\n`;
     
     if (parentName && parentName.trim()) {

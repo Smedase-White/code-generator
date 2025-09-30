@@ -10,6 +10,8 @@ class DataValue {
 
     if (this.value) { 
       this.element.value = this.value; 
+    } else {
+      this.value = this.element.value;
     }
     
     this.element.addEventListener('change', () => {
@@ -325,7 +327,7 @@ export class Data {
       Object.keys(this.data).forEach((key) => { 
         this.data[key].updateValue(undefined); 
       });
-      showNotification('Все данные успешно очищены', 'success');
+      location.reload();
     }
   }
 }
