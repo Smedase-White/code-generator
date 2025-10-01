@@ -87,7 +87,7 @@ export class LuaGenerator {
     }
     
     if (newAttributes.length > 0) {
-      code += `function ${className}:initialize_from_table(data)\n`;
+      code += `function ${className}.static:initialize_from_table(data)\n`;
 
       const requiredAttributes = newAttributes.filter(attr => attr.required);
       if (requiredAttributes.length > 0) {
@@ -105,9 +105,9 @@ export class LuaGenerator {
       newAttributes.forEach(attr => {
         if (attr.name) {
           if (attr.hasStandardSetter) {
-            code += `  instance:_set_${attr.name}(data.${attr.name})\n`;
+            code += `  instance:set_${attr.name}(data.${attr.name})\n`;
           } else if (attr.dictionaryBase) {
-            code += `  instance:_set_${attr.name}_from_dictionary(data.${attr.name})\n`;
+            code += `  instance:set_${attr.name}_from_dictionary(data.${attr.name})\n`;
           } else {
             code += `  instance.${attr.name} = data.${attr.name}\n`;
           }
