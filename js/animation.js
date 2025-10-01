@@ -42,9 +42,16 @@ export function showNotification(message, type = 'info') {
   const notification = document.createElement('div');
   notification.className = `notification`;
   notification.textContent = message;
-
   notification.style.backgroundColor = colors[type] || colors.info;
-  document.body.appendChild(notification);
+  
+  let notificationContainer = document.querySelector('.notification-container');
+  if (!notificationContainer) {
+    notificationContainer = document.createElement('div');
+    notificationContainer.className = 'notification-container';
+    document.body.appendChild(notificationContainer);
+  }
+  
+  notificationContainer.appendChild(notification);
   
   setTimeout(() => {
     notification.classList.add('show');
@@ -54,7 +61,7 @@ export function showNotification(message, type = 'info') {
     notification.classList.remove('show');
     setTimeout(() => {
       if (notification.parentNode) {
-        notification.parentNode.removeChild(notification);
+        notification.remove();
       }
     }, 500);
   }, 3000);
@@ -115,19 +122,6 @@ export function displayCodeImmediately(element, text) {
   setTimeout(() => {
     element.style.animation = '';
   }, 600);
-}
-
-export function createParallaxBackground() {
-  const parallaxBg = document.createElement('div');
-  parallaxBg.className = 'parallax-bg';
-  
-  for (let i = 0; i < 3; i++) {
-    const element = document.createElement('div');
-    element.className = 'parallax-element';
-    parallaxBg.appendChild(element);
-  }
-  
-  document.body.appendChild(parallaxBg);
 }
 
 export function animateButton(button) {

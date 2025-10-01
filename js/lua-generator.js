@@ -1,5 +1,5 @@
 export class LuaGenerator {
-  getAutoImports(attributes) {
+  getAutoImports(attributes, className, parentName) {
     const imports = new Set();
     
     attributes.forEach(attr => {
@@ -10,6 +10,13 @@ export class LuaGenerator {
         imports.add('Dictionary');
       }
     });
+    
+    if (className && imports.has(className)) {
+      imports.delete(className);
+    }
+    if (parentName && imports.has(parentName)) {
+      imports.delete(parentName);
+    }
     
     return Array.from(imports).sort();
   }
@@ -42,7 +49,7 @@ export class LuaGenerator {
       code += `${this.generateImportString(parentName)}\n\n`
     }
 
-    const imports = this.getAutoImports(attributes);
+    const imports = this.getAutoImports(attributes, className, parentName);
     if (imports.length > 0) {
       code += imports.map(importClass => `${this.generateImportString(importClass)}`).join('\n')
       code += `\n\n`
@@ -99,6 +106,8 @@ export class LuaGenerator {
         if (attr.name) {
           if (attr.hasStandardSetter) {
             code += `  instance:_set_${attr.name}(data.${attr.name})\n`;
+          } else if (attr.dictionaryBase) {
+            code += `  instance:_set_${attr.name}_from_dictionary(data.${attr.name})\n`;
           } else {
             code += `  instance.${attr.name} = data.${attr.name}\n`;
           }

@@ -20,10 +20,6 @@ class DataValue {
         localStorage.setItem(this.storage_key, this.value);
       }
     });
-
-    this.element.addEventListener('focus', () => {
-      this.element.parentElement.style.transform = 'translateY(-2px)';
-    });
     
     this.element.addEventListener('blur', () => {
       this.element.parentElement.style.transform = 'translateY(0)';
@@ -54,10 +50,6 @@ class RowElementValue {
       
       this.element.addEventListener('change', () => { 
         this.row.updateElement(this.column, this.element.value); 
-      });
-
-      this.element.addEventListener('focus', () => {
-        td.style.transform = 'translateY(-1px)';
       });
       
       this.element.addEventListener('blur', () => {
@@ -95,7 +87,7 @@ class RowElementValue {
       nameRu: 'Имя атрибута',
       type: 'AttrType',
       dictionaryBase: 'DictBase',
-      dictionaryAttr: 'attribute_name',
+      dictionaryAttr: 'dict_attribute',
       key: 'key',
       map: '{"attr": "value"}'
     };
@@ -210,33 +202,41 @@ export class Data {
     this.data = {
       classType: new DataValue(elements.classTypeSelect, 'luaGenerator_classType'),
 
-      className: new DataValue(elements.classNameInput, 'luaGenerator_className'),
-      classNameRu: new DataValue(elements.classNameRuInput, 'luaGenerator_classNameRu'),
-      parentName: new DataValue(elements.parentNameInput, 'luaGenerator_parentName'),
-      baseAttributes: new TableValue(elements.baseAttributesBody, elements.addBaseAttributeBtn, 'luaGenerator_attributes', {
-        name: 'text',
-        nameRu: 'text',
-        type: 'text',
-        fromParent: 'checkbox',
-        selfAttr: 'checkbox',
-        required: 'checkbox',
-        hasStandardSetter: 'checkbox',
-        dictionaryBase: 'text',
-        dictionaryAttr: 'text'
-      }),
+      base: {
+        className: new DataValue(elements.classNameInput, 'luaGenerator_className'),
+        classNameRu: new DataValue(elements.classNameRuInput, 'luaGenerator_classNameRu'),
+        parentName: new DataValue(elements.parentNameInput, 'luaGenerator_parentName'),
+        baseAttributes: new TableValue(elements.baseAttributesBody, elements.addBaseAttributeBtn, 'luaGenerator_attributes', {
+          name: 'text',
+          nameRu: 'text',
+          type: 'text',
+          fromParent: 'checkbox',
+          selfAttr: 'checkbox',
+          required: 'checkbox',
+          hasStandardSetter: 'checkbox',
+          dictionaryBase: 'text',
+          dictionaryAttr: 'text'
+        })
+      },
 
-      dictBase: new DataValue(elements.dictBaseInput, 'luaGenerator_dictBase'),
-      dictNameRu: new DataValue(elements.dictNameRuInput, 'luaGenerator_dictNameRu'),
-      recordAttributes: new TableValue(elements.recordAttributesBody, elements.addRecordAttributeBtn, 'luaGenerator_recordAttributes', {
-        name: 'text',
-        nameRu: 'text',
-        type: 'text'
-      }),
-      recordValues: new TableValue(elements.recordValuesBody, elements.addRecordValueBtn, 'luaGenerator_recordValues', {
-        key: 'text',
-        nameRu: 'text',
-        map: 'text'
-      }),
+      dictionary: {
+        dictBase: new DataValue(elements.dictBaseInput, 'luaGenerator_dictBase'),
+        dictNameRu: new DataValue(elements.dictNameRuInput, 'luaGenerator_dictNameRu'),
+        recordAttributes: new TableValue(elements.recordAttributesBody, elements.addRecordAttributeBtn, 'luaGenerator_recordAttributes', {
+          name: 'text',
+          nameRu: 'text',
+          type: 'text'
+        }),
+        recordValues: new TableValue(elements.recordValuesBody, elements.addRecordValueBtn, 'luaGenerator_recordValues', {
+          key: 'text',
+          nameRu: 'text',
+          map: 'text'
+        })
+      },
+
+      array: {},
+
+      catalog: {},
 
       codeType: new DataValue(elements.codeTypeSelect, 'luaGenerator_codeType')
     };
@@ -250,19 +250,27 @@ export class Data {
 
   updateForm() {
     let classType = this.data.classType.value;
-    if (classType === 'dictionary') {
-      this.elements.baseClassForm.style.display = 'none';
-      this.elements.dictionaryForm.style.display = 'block';
-    } else {
-      this.elements.baseClassForm.style.display = 'block';
-      this.elements.dictionaryForm.style.display = 'none';
-    }
+    
+    this.elements.baseForm.style.display = 'none';
+    this.elements.dictionaryForm.style.display = 'none';
+    this.elements.arrayForm.style.display = 'none';
+    this.elements.catalogForm.style.display = 'none';
+    
+    this.elements[`${classType}Form`].style.display = 'block';
   }
 
   getValue() {
-    return Object.fromEntries(
-      Object.entries(this.data).map(([key, value]) => [key, value.value])
-    );
+    const result = {
+      classType: this.data.classType.value,
+      codeType: this.data.codeType.value
+    };
+  
+    result[classType.value] = {}
+    Object.entries(this.data[classType.value]).forEach(([key, data]) => {
+      result[classType.value][key] = data.value
+    });
+
+    return result;
   }
 
   saveToFile() {
@@ -271,7 +279,7 @@ export class Data {
     const blob = new Blob([jsonData], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     
-    const className = data.classType === 'dictionary' ? `${data.dictBase}Dictionary` : data.className;
+    const className = data.classType === 'dictionary' ? `${data.dictionary.dictBase}Dictionary` : data.base.className;
     const fileName = `${className || 'class_data'}_config.json`;
     
     const a = document.createElement('a');
@@ -289,23 +297,18 @@ export class Data {
     const file = event.target.files[0];
     if (!file) return;
     
-    const selfData = this.data;
     const reader = new FileReader();
     
-    reader.onload = function(e) {
+    reader.onload = (e) => {
       try {
-        const data = JSON.parse(e.target.result);
+        const loadedData = JSON.parse(e.target.result);
         
-        if (typeof data !== 'object' || data === null) {
+        if (typeof loadedData !== 'object' || loadedData === null) {
           throw new Error('Некорректный формат файла');
         }
         
         if (confirm('Загрузить данные из файла? Текущие данные будут потеряны.')) {
-          Object.entries(data).forEach(([key, value]) => { 
-            if (selfData[key]) {
-              selfData[key].updateValue(value); 
-            }
-          });
+          this.setValue(loadedData);
           showNotification('Данные успешно загружены из файла', 'success');
         }
       } catch (error) {
@@ -314,7 +317,7 @@ export class Data {
       }
     };
     
-    reader.onerror = function() {
+    reader.onerror = () => {
       showNotification('Ошибка при чтении файла', 'error');
     };
     
@@ -322,12 +325,36 @@ export class Data {
     event.target.value = '';
   }
 
+  setValue(data) {
+    if (data.classType && this.data.classType) {
+      this.data.classType.updateValue(data.classType);
+    }
+
+    if (data.codeType && this.data.codeType) {
+      this.data.codeType.updateValue(data.codeType);
+    }
+
+    Object.entries(data[data.classType]).forEach(([key, value]) => {
+      this.data[data.classType][key].updateValue(value)
+    });
+
+    this.updateForm();
+  }
+
   clear() {
     if (confirm('Вы уверены, что хотите очистить все данные?')) {
       Object.keys(this.data).forEach((key) => { 
-        this.data[key].updateValue(undefined); 
+        if (typeof this.data[key] === 'object' && this.data[key] !== null) {
+          Object.keys(this.data[key]).forEach((subKey) => {
+            if (this.data[key][subKey] && typeof this.data[key][subKey].updateValue === 'function') {
+              this.data[key][subKey].updateValue(undefined);
+            }
+          });
+        } else if (this.data[key] && typeof this.data[key].updateValue === 'function') {
+          this.data[key].updateValue(undefined);
+        }
       });
-      location.reload();
+      showNotification('Все данные успешно очищены', 'success');
     }
   }
 }

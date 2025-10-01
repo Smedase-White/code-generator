@@ -17,12 +17,13 @@
         <select id="classType">
           <option value="base">Базовый</option>
           <option value="dictionary">Справочник и запись</option>
+          <option value="array" disabled>Массив (скоро)</option>
           <option value="catalog" disabled>Каталог и элементы (скоро)</option>
         </select>
       </div>
 
       <!-- Форма для базового класса -->
-      <div id="baseClassForm" class="class-form">
+      <div id="baseForm" class="class-form">
         <div class="header-actions">
           <h2>Информация о классе</h2>
         </div>
@@ -61,8 +62,8 @@
           <tbody id="baseAttributesBody"></tbody>
           <tfoot>
             <tr>
-              <td colspan="1">
-                <button id="addBaseAttribute" class="btn btn-success">Добавить атрибут</button>
+              <td colspan="10">
+                <button id="addBaseAttribute" class="btn add-button-cell">Добавить атрибут</button>
               </td>
             </tr>
           </tfoot>
@@ -99,8 +100,8 @@
           <tbody id="recordAttributesBody"></tbody>
           <tfoot>
             <tr>
-              <td colspan="1">
-                <button id="addRecordAttribute" class="btn btn-success">Добавить атрибут</button>
+              <td colspan="4">
+                <button id="addRecordAttribute" class="btn add-button-cell">Добавить атрибут</button>
               </td>
             </tr>
           </tfoot>
@@ -120,13 +121,17 @@
           <tbody id="recordValuesBody"></tbody>
           <tfoot>
             <tr>
-              <td colspan="1">
-                <button id="addRecordValue" class="btn btn-success">Добавить значение</button>
+              <td colspan="4">
+                <button id="addRecordValue" class="btn add-button-cell">Добавить значение</button>
               </td>
             </tr>
           </tfoot>
         </table>
       </div>
+
+      <div id="arrayForm" class="class-form" style="display: none;"></div>
+
+      <div id="catalogForm" class="class-form" style="display: none;"></div>
 
       <h2>Действия</h2>
 
@@ -134,6 +139,7 @@
         <button id="saveData" class="btn btn-success">Сохранить данные</button>
         <button id="loadData" class="btn btn-primary">Загрузить данные</button>
         <button id="clearData" class="btn btn-warning">Очистить все данные</button>
+        <input type="file" id="saveFileInput" accept=".json" style="display: none;">
       </div>
     </div>
     

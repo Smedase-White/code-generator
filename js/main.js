@@ -1,14 +1,12 @@
 import { LuaGenerator } from './lua-generator.js';
 import { JsonGenerator } from './json-generator.js';
-import { typeWriterWithClear, animateButton, createParallaxBackground, showNotification } from './animation.js';
+import { typeWriterWithClear, animateButton, showNotification } from './animation.js';
 import { Data } from './data.js';
-
-createParallaxBackground();
 
 const elements = {
   classTypeSelect: document.getElementById('classType'),
 
-  baseClassForm: document.getElementById('baseClassForm'),
+  baseForm: document.getElementById('baseForm'),
   classNameInput: document.getElementById('className'),
   classNameRuInput: document.getElementById('classNameRu'),
   parentNameInput: document.getElementById('parentName'),
@@ -22,6 +20,9 @@ const elements = {
   addRecordAttributeBtn: document.getElementById('addRecordAttribute'),
   recordValuesBody: document.getElementById('recordValuesBody'),
   addRecordValueBtn: document.getElementById('addRecordValue'),
+
+  arrayForm: document.getElementById('arrayForm'),
+  catalogForm: document.getElementById('catalogForm'),
 
   clearDataBtn: document.getElementById('clearData'),
   saveDataBtn: document.getElementById('saveData'),
@@ -70,15 +71,16 @@ function generateCode() {
   animateButton(elements.generateCodeBtn);
 
   const info = data.getValue();
+  const formInfo = info[info.classType];
 
   let fileName = '';
   if (info.codeType === 'json') {
     fileName = 'request.json';
   } else if (info.classType === 'dictionary' && info.codeType === 'lua') {
-    const name = get_snake_case(info.dictBase);
+    const name = get_snake_case(formInfo.dictBase);
     fileName = `${name}_dictionary.lua | ${name}_record.lua`;
   } else {
-    fileName = `${get_snake_case(info.className)}.lua`;
+    fileName = `${get_snake_case(formInfo.className)}.lua`;
   }
   updateFileNameDisplay(fileName);
   
@@ -86,27 +88,27 @@ function generateCode() {
   
   if (info.codeType === 'lua') {
     if (info.classType === 'dictionary') {
-      Object.values(info.recordAttributes).forEach((value) => {
+      Object.values(formInfo.recordAttributes).forEach((value) => {
         value.selfAttr = true;
         value.required = true;
       });
       
       const dictCodeInfo = {
-        className: `${info.dictBase}Dictionary`,
-        classNameRu: `Справочник "${info.dictNameRu}"`,
+        className: `${formInfo.dictBase}Dictionary`,
+        classNameRu: `Справочник "${formInfo.dictNameRu}"`,
         parentName: 'Dictionary',
-        attributes: [ { name: '__values_type', type: `${info.dictBase}Record`, fromParent: true } ]
+        attributes: [ { name: '__values_type', type: `${formInfo.dictBase}Record`, fromParent: true } ]
       };
       
-      let recordAttributes = [...info.recordAttributes]
+      let recordAttributes = [...formInfo.recordAttributes]
       recordAttributes.unshift({
         name: 'dictionary_owner',
-        type: `${info.dictBase}Dictionary`,
+        type: `${formInfo.dictBase}Dictionary`,
         fromParent: true
       });
       const recordCodeInfo = {
-        className: `${info.dictBase}Record`,
-        classNameRu: `Запись справочника "${info.dictNameRu}"`,
+        className: `${formInfo.dictBase}Record`,
+        classNameRu: `Запись справочника "${formInfo.dictNameRu}"`,
         parentName: 'BaseRecord',
         attributes: recordAttributes
       };
@@ -114,20 +116,20 @@ function generateCode() {
       generatedCode = `${luaGenerator.generateLuaCode(dictCodeInfo)}${luaGenerator.generateLuaCode(recordCodeInfo)}`;
     } else {
       const baseCodeInfo = {
-        className: info.className,
-        classNameRu: info.classNameRu,
-        parentName: info.parentName,
-        attributes: info.baseAttributes
+        className: formInfo.className,
+        classNameRu: formInfo.classNameRu,
+        parentName: formInfo.parentName,
+        attributes: formInfo.baseAttributes
       };
       generatedCode = luaGenerator.generateLuaCode(baseCodeInfo);
     }
   } else if (info.codeType === 'json') {
     if (info.classType === 'dictionary') {
-      generatedCode = jsonGenerator.generateDictionaryRequest(info);
+      generatedCode = jsonGenerator.generateDictionaryRequest(formInfo);
     } else {
       generatedCode = jsonGenerator.generateJsonRequest(
-        info.className,
-        info.baseAttributes
+        formInfo.className,
+        formInfo.baseAttributes
       );
     }
   } else {
@@ -137,6 +139,8 @@ function generateCode() {
   const formattedCode = formatGeneratedCode(generatedCode);
   elements.generatedCodePre.innerHTML = '';
   elements.generatedCodePre.appendChild(formattedCode);
+  
+  showNotification(`Код сгенерирован.`, 'success');
 
   /*typeWriterWithClear(elements.generatedCodePre, formattedCode, 1, () => {
     elements.generatedCodePre.classList.add('code-appear');
