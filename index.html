@@ -11,56 +11,136 @@
   <div class="container">
     <h1>Генератор кода классов</h1>
     
-    <div class="form-section">
-      <div class="header-actions">
-        <h2>Информация о классе</h2>
+    <div class="section">
+      <div class="selector">
+        <label for="classType">Тип класса:</label>
+        <select id="classType">
+          <option value="base">Базовый</option>
+          <option value="dictionary">Справочник и запись</option>
+          <option value="array" disabled>Массив (скоро)</option>
+          <option value="catalog" disabled>Каталог и элементы (скоро)</option>
+        </select>
+        <label for="repositoryLocation">Расположение в репозитории:</label>
+        <select id="repositoryLocation">
+          <option value="Общее">Общее</option>
+          <option value="ЛКДЛ">ЛКДЛ</option>
+          <option value="ММОУ">ММОУ</option>
+          <option value="МПМ">МПМ</option>
+          <option value="СВРМ">СВРМ</option>
+        </select>
       </div>
-      <div class="class-info-form">
-        <div class="form-group">
-          <label for="className">Наименование:</label>
-          <input type="text" id="className">
+
+      <!-- Форма для базового класса -->
+      <div id="baseForm" class="class-form">
+        <div class="header-actions">
+          <h2>Информация о классе</h2>
         </div>
-        <div class="form-group">
-          <label for="classNameRu">Русское имя:</label>
-          <input type="text" id="classNameRu">
+        <div class="class-info-form">
+          <div class="form-group">
+            <label for="className">Системное наименование:</label>
+            <input type="text" id="className" placeholder="ClassName">
+          </div>
+          <div class="form-group">
+            <label for="classNameRu">Русское наименование:</label>
+            <input type="text" id="classNameRu" placeholder="Имя класса">
+          </div>
+          <div class="form-group">
+            <label for="parentName">Наименование родителя:</label>
+            <input type="text" id="parentName" placeholder="ParentName">
+          </div>
         </div>
-        <div class="form-group">
-          <label for="parentName">Имя родителя:</label>
-          <input type="text" id="parentName">
-        </div>
+
+        <h2>Атрибуты класса</h2>
+        
+        <table id="attributesTable">
+          <thead>
+            <tr>
+              <th>Имя</th>
+              <th>Русское имя</th>
+              <th>Тип атрибута</th>
+              <th>Родительский</th>
+              <th>Собственность</th>
+              <th>Обязательность</th>
+              <th>Уникальность</th>
+              <th>Сеттер</th>
+              <th>Основа спр. сеттера</th>
+              <th>Атрибут спр. сеттера</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="baseAttributesBody"></tbody>
+          <tfoot>
+            <tr>
+              <td colspan="11">
+                <button id="addBaseAttribute" class="btn add-button-cell">Добавить атрибут</button>
+              </td>
+            </tr>
+          </tfoot>
+        </table>
       </div>
 
-      <h2>Атрибуты класса</h2>
-      
-      <table id="attributesTable">
-        <thead>
-          <tr>
-            <th>Имя</th>
-            <th>Русское имя</th>
-            <th>Тип атрибута</th>
+      <!-- Форма для справочника и записи -->
+      <div id="dictionaryForm" class="class-form" style="display: none;">
+        <div class="header-actions">
+          <h2>Информация о справочнике</h2>
+        </div>
+        <div class="class-info-form">
+          <div class="form-group">
+            <label for="dictBase">Основа справочника:</label>
+            <input type="text" id="dictBase">
+          </div>
+          <div class="form-group">
+            <label for="dictNameRu">Русское имя:</label>
+            <input type="text" id="dictNameRu">
+          </div>
+        </div>
 
-            <th>Родительский</th>
-            <th>Собственность</th>
-            <th>Обязательность</th>
-            <th>Сеттер</th>
+        <h2>Атрибуты записи</h2>
+        
+        <table id="recordAttributesTable">
+          <thead>
+            <tr>
+              <th>Имя</th>
+              <th>Русское имя</th>
+              <th>Тип атрибута</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="recordAttributesBody"></tbody>
+          <tfoot>
+            <tr>
+              <td colspan="4">
+                <button id="addRecordAttribute" class="btn add-button-cell">Добавить атрибут</button>
+              </td>
+            </tr>
+          </tfoot>
+        </table>
 
-            <th>Справочный сеттер</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody id="attributesBody">
-          <tr class="empty-row">
-            <td colspan="9">Нет добавленных атрибутов</td>
-          </tr>
-        </tbody>
-        <tfoot>
-          <tr>
-            <td colspan="1">
-              <button id="addAttribute" class="btn btn-success">Добавить атрибут</button>
-            </td>
-          </tr>
-        </tfoot>
-      </table>
+        <h2>Значения записи</h2>
+        
+        <table id="recordValuesTable">
+          <thead>
+            <tr>
+              <th>Ключ</th>
+              <th>Русское имя</th>
+              <th>JSON значений</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="recordValuesBody"></tbody>
+          <tfoot>
+            <tr>
+              <td colspan="4">
+                <button id="addRecordValue" class="btn add-button-cell">Добавить значение</button>
+              </td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+
+      <div id="arrayForm" class="class-form" style="display: none;"></div>
+
+      <div id="catalogForm" class="class-form" style="display: none;"></div>
 
       <h2>Действия</h2>
 
@@ -68,25 +148,28 @@
         <button id="saveData" class="btn btn-success">Сохранить данные</button>
         <button id="loadData" class="btn btn-primary">Загрузить данные</button>
         <button id="clearData" class="btn btn-warning">Очистить все данные</button>
+        <input type="file" id="saveFileInput" accept=".json" style="display: none;">
       </div>
     </div>
     
-    <div class="code-section">
+    <div class="section">
       <div class="code-header">
         <h2>Сгенерированный код</h2>
         <button id="generateCode" class="btn btn-success">Сгенерировать код</button>
-        <div class="code-type-selector">
-          <label for="codeType">Тип кода:</label>
+        <div class="selector">
+          <label for="codeType">Тип ответа:</label>
           <select id="codeType">
             <option value="lua">Lua код</option>
             <option value="json">JSON запрос</option>
-            <option value="doc" disabled>Документация (скоро)</option>
+            <option value="doc">Документация</option>
           </select>
         </div>
       </div>
       <div class="filename-section">
         <span class="filename-label">Имя файла:</span>
-        <span id="fileName" class="filename"></span>
+        <div id="fileName" class="filename">
+          <span class="filename-part" data-filename="">Имя класса появится здесь после нажатия кнопки "Сгенерировать код"</span>
+        </div>
       </div>
       <pre id="generatedCode">Код появится здесь после нажатия кнопки "Сгенерировать код"</pre>
     </div>

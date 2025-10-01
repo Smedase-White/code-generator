@@ -1,223 +1,339 @@
-import { getFormData } from './config.js';
-import { UIManager } from './ui-manager.js';
-import { StorageManager } from './storage-manager.js';
 import { LuaGenerator } from './lua-generator.js';
 import { JsonGenerator } from './json-generator.js';
-import { CodeAnimator } from './code-animator.js';
-
-let attributes = [];
+import { DocGenerator } from './doc-generator.js';
+import { typeWriterWithClear, animateButton, showNotification } from './animation.js';
+import { Data } from './data.js';
 
 const elements = {
+  classTypeSelect: document.getElementById('classType'),
+  repositoryLocationSelect: document.getElementById('repositoryLocation'),
+
+  baseForm: document.getElementById('baseForm'),
   classNameInput: document.getElementById('className'),
   classNameRuInput: document.getElementById('classNameRu'),
   parentNameInput: document.getElementById('parentName'),
-  addAttributeBtn: document.getElementById('addAttribute'),
+  baseAttributesBody: document.getElementById('baseAttributesBody'),
+  addBaseAttributeBtn: document.getElementById('addBaseAttribute'),
+
+  dictionaryForm: document.getElementById('dictionaryForm'),
+  dictBaseInput: document.getElementById('dictBase'),
+  dictNameRuInput: document.getElementById('dictNameRu'),
+  recordAttributesBody: document.getElementById('recordAttributesBody'),
+  addRecordAttributeBtn: document.getElementById('addRecordAttribute'),
+  recordValuesBody: document.getElementById('recordValuesBody'),
+  addRecordValueBtn: document.getElementById('addRecordValue'),
+
+  arrayForm: document.getElementById('arrayForm'),
+  catalogForm: document.getElementById('catalogForm'),
+
   clearDataBtn: document.getElementById('clearData'),
   saveDataBtn: document.getElementById('saveData'),
   loadDataBtn: document.getElementById('loadData'),
-  attributesBody: document.getElementById('attributesBody'),
+
   generateCodeBtn: document.getElementById('generateCode'),
-  generatedCodePre: document.getElementById('generatedCode'),
   fileNameSpan: document.getElementById('fileName'),
   codeTypeSelect: document.getElementById('codeType'),
+  generatedCodePre: document.getElementById('generatedCode'),
+
   fileInput: document.getElementById('fileInput')
 };
 
-const uiManager = new UIManager(elements, attributes);
-const storageManager = new StorageManager(elements, attributes);
+const data = new Data(elements);
 const luaGenerator = new LuaGenerator();
 const jsonGenerator = new JsonGenerator();
-const codeAnimator = new CodeAnimator();
 
-window.deleteAttribute = (index) => {
-  const row = elements.attributesBody.children[index];
-  if (row) {
-    row.style.transition = 'all 0.3s ease-out';
-    row.style.opacity = '0';
-    row.style.transform = 'translateX(-100%)';
-    
-    setTimeout(() => {
-      attributes.splice(index, 1);
-      uiManager.renderAttributesTable();
-      storageManager.saveToLocalStorage();
-    }, 300);
-  } else {
-    attributes.splice(index, 1);
-    uiManager.renderAttributesTable();
-    storageManager.saveToLocalStorage();
-  }
-};
-
-window.updateAttribute = (index, field, value) => {
-  attributes[index][field] = value;
-  storageManager.saveToLocalStorage();
-};
-
-window.clearAllData = () => {
-  if (confirm('Вы уверены, что хотите очистить все данные? Это действие нельзя отменить.')) {
-    elements.classNameInput.value = '';
-    elements.classNameRuInput.value = '';
-    elements.parentNameInput.value = '';
-    elements.codeTypeSelect.value = 'lua';
-    
-    attributes.length = 0;
-    
-    elements.generatedCodePre.textContent = 'Код появится здесь после нажатия кнопки "Сгенерировать код"';
-    uiManager.updateFileName();
-    
-    storageManager.clearLocalStorage();
-    uiManager.renderAttributesTable();
-    uiManager.showNotification('Все данные успешно очищены', 'success');
-  }
-};
+function get_snake_case(value) {
+  return value ? value.replace(/([a-z])([A-Z])/g, '$1_$2').toLowerCase() : '';
+}
 
 function setupEventListeners() {
-  elements.classNameInput.addEventListener('input', () => {
-    uiManager.updateFileName();
-    storageManager.saveToLocalStorage();
+  elements.clearDataBtn.addEventListener('click', () => { 
+    animateButton(elements.clearDataBtn);
+    data.clear(); 
   });
-
-  elements.classNameRuInput.addEventListener('input', () => {
-    storageManager.saveToLocalStorage();
+  
+  elements.saveDataBtn.addEventListener('click', () => { 
+    animateButton(elements.saveDataBtn);
+    data.saveToFile(); 
   });
-
-  elements.parentNameInput.addEventListener('input', () => {
-    storageManager.saveToLocalStorage();
+  
+  elements.loadDataBtn.addEventListener('click', () => {
+    animateButton(elements.loadDataBtn);
+    elements.fileInput.click();
   });
-
-  elements.codeTypeSelect.addEventListener('change', () => {
-    uiManager.updateFileName();
-    storageManager.saveToLocalStorage();
+  
+  elements.fileInput.addEventListener('change', (event) => { 
+    data.loadFromFile(event);
   });
-
-  elements.addAttributeBtn.addEventListener('click', () => {
-    attributes.push({
-      name: '',
-      nameRu: '',
-      type: '',
-      fromParent: false,
-      selfAttr: false,
-      required: false,
-      hasStandardSetter: false,
-      dictionaryBase: '',
-      dictionaryAttr: ''
-    });
-    
-    uiManager.renderAttributesTable();
-    uiManager.animateNewAttribute(attributes.length - 1);
-    storageManager.saveToLocalStorage();
-  });
-
-  elements.clearDataBtn.addEventListener('click', window.clearAllData);
-  elements.saveDataBtn.addEventListener('click', saveDataToFile);
-  elements.loadDataBtn.addEventListener('click', () => elements.fileInput.click());
-  elements.fileInput.addEventListener('change', loadDataFromFile);
 
   elements.generateCodeBtn.addEventListener('click', generateCode);
 }
 
-function saveDataToFile() {
-  const data = getFormData(elements.classNameInput, elements.classNameRuInput, elements.parentNameInput, elements.codeTypeSelect, attributes);
-  const jsonData = JSON.stringify(data, null, 2);
-  const blob = new Blob([jsonData], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  
-  const className = data.className || 'class_data';
-  const fileName = `${className}_config.json`;
-  
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = fileName;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-  
-  uiManager.showNotification('Данные успешно сохранены в файл', 'success');
-}
-
-function loadDataFromFile(event) {
-  const file = event.target.files[0];
-  if (!file) return;
-  
-  const reader = new FileReader();
-  reader.onload = function(e) {
-    try {
-      const data = JSON.parse(e.target.result);
-      
-      if (typeof data !== 'object' || data === null) {
-        throw new Error('Некорректный формат файла');
-      }
-      
-      if (confirm('Загрузить данные из файла? Текущие данные будут потеряны.')) {
-        setFormData(data);
-        uiManager.showNotification('Данные успешно загружены из файла', 'success');
-      }
-    } catch (error) {
-      console.error('Ошибка при загрузке файла:', error);
-      uiManager.showNotification('Ошибка при загрузке файла: ' + error.message, 'error');
-    }
-  };
-  
-  reader.onerror = function() {
-    uiManager.showNotification('Ошибка при чтении файла', 'error');
-  };
-  
-  reader.readAsText(file);
-  event.target.value = '';
-}
-
-function setFormData(data) {
-  if (data.className) elements.classNameInput.value = data.className;
-  if (data.classNameRu) elements.classNameRuInput.value = data.classNameRu;
-  if (data.parentName) elements.parentNameInput.value = data.parentName;
-  if (data.codeType) elements.codeTypeSelect.value = data.codeType;
-  if (data.attributes && Array.isArray(data.attributes)) {
-    attributes.splice(0, attributes.length, ...data.attributes);
-  }
-  
-  uiManager.updateFileName();
-  uiManager.renderAttributesTable();
-  storageManager.saveToLocalStorage();
-}
-
 function generateCode() {
-  elements.generateCodeBtn.classList.add('btn-pulse');
-  setTimeout(() => {
-    elements.generateCodeBtn.classList.remove('btn-pulse');
-  }, 500);
+  animateButton(elements.generateCodeBtn);
 
-  const className = elements.classNameInput.value.trim();
-  const codeType = elements.codeTypeSelect.value;
-  
-  uiManager.updateFileName();
+  const info = data.getValue();
+  const formInfo = info[info.classType];
+
+  let fileName = '';
+  if (info.codeType === 'json') {
+    fileName = 'request.json';
+  } else if (info.codeType === 'doc') {
+    fileName = `${get_snake_case(formInfo.className || formInfo.dictBase)}_documentation.html`;
+  } else if (info.classType === 'dictionary' && info.codeType === 'lua') {
+    const name = get_snake_case(formInfo.dictBase);
+    fileName = `${name}_dictionary.lua | ${name}_record.lua`;
+  } else {
+    fileName = `${get_snake_case(formInfo.className)}.lua`;
+  }
+  updateFileNameDisplay(fileName);
   
   let generatedCode = '';
   
-  if (codeType === 'lua') {
-    generatedCode = luaGenerator.generateLuaCode(
-      className,
-      elements.classNameRuInput.value.trim(),
-      elements.parentNameInput.value.trim(),
-      attributes
-    );
-  } else if (codeType === 'json') {
-    generatedCode = jsonGenerator.generateJsonRequest(className, attributes);
+  if (info.codeType === 'lua') {
+    if (info.classType === 'dictionary') {
+      Object.values(formInfo.recordAttributes).forEach((value) => {
+        value.selfAttr = true;
+        value.required = true;
+      });
+      
+      const dictCodeInfo = {
+        className: `${formInfo.dictBase}Dictionary`,
+        classNameRu: `Справочник "${formInfo.dictNameRu}"`,
+        parentName: 'Dictionary',
+        attributes: [ { name: '__values_type', type: `${formInfo.dictBase}Record`, fromParent: true } ]
+      };
+      
+      let recordAttributes = [...formInfo.recordAttributes]
+      recordAttributes.unshift({
+        name: 'dictionary_owner',
+        type: `${formInfo.dictBase}Dictionary`,
+        fromParent: true
+      });
+      const recordCodeInfo = {
+        className: `${formInfo.dictBase}Record`,
+        classNameRu: `Запись справочника "${formInfo.dictNameRu}"`,
+        parentName: 'BaseRecord',
+        attributes: recordAttributes
+      };
+      
+      generatedCode = `${luaGenerator.generateLuaCode(dictCodeInfo)}${luaGenerator.generateLuaCode(recordCodeInfo)}`;
+    } else {
+      const baseCodeInfo = {
+        className: formInfo.className,
+        classNameRu: formInfo.classNameRu,
+        parentName: formInfo.parentName,
+        attributes: formInfo.baseAttributes
+      };
+      generatedCode = luaGenerator.generateLuaCode(baseCodeInfo);
+    }
+  } else if (info.codeType === 'json') {
+    if (info.classType === 'dictionary') {
+      generatedCode = jsonGenerator.generateDictionaryRequest(formInfo);
+    } else {
+      generatedCode = jsonGenerator.generateJsonRequest(
+        formInfo.className,
+        formInfo.baseAttributes
+      );
+    }
+  } else if (info.codeType === 'doc') {
+    const docGenerator = new DocGenerator();
+    if (info.classType === 'dictionary') {
+      generatedCode = docGenerator.generateDictionaryDocumentation(info);
+    } else {
+      generatedCode = docGenerator.generateDocumentation(info);
+    }
   } else {
-    generatedCode = 'Документация пока не реализована';
+      generatedCode = 'Документация пока не реализована';
   }
 
-  codeAnimator.typeWriterWithClear(elements.generatedCodePre, generatedCode, 1, () => {
+  if (info.codeType === 'doc') {
+    displayHtmlDocumentation(generatedCode);
+  } else {
+    const formattedCode = formatGeneratedCode(generatedCode);
+    elements.generatedCodePre.innerHTML = '';
+    elements.generatedCodePre.appendChild(formattedCode);
+  }
+  
+  showNotification(`Код сгенерирован.`, 'success');
+
+  /*typeWriterWithClear(elements.generatedCodePre, formattedCode, 1, () => {
     elements.generatedCodePre.classList.add('code-appear');
     setTimeout(() => {
       elements.generatedCodePre.classList.remove('code-appear');
     }, 500);
+  });*/
+}
+
+function displayHtmlDocumentation(htmlContent) {
+    elements.generatedCodePre.innerHTML = '';
+    
+    elements.generatedCodePre.classList.add('documentation-mode');
+    
+    const iframe = document.createElement('iframe');
+    iframe.className = 'documentation-iframe';
+    iframe.sandbox = 'allow-same-origin allow-scripts';
+    
+    elements.generatedCodePre.appendChild(iframe);
+    
+    iframe.onload = function() {
+        const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+        iframeDoc.open();
+        iframeDoc.write(htmlContent);
+        iframeDoc.close();
+    };
+    
+    iframe.src = 'about:blank';
+}
+
+function setupCopyFunctionality() {
+  document.addEventListener('click', (e) => {
+    if (e.target.classList.contains('filename-part')) {
+      const filename = e.target.getAttribute('data-filename');
+      if (filename) {
+        copyToClipboard(filename, e.target);
+        showNotification(`Имя файла '${filename}' скопировано в буфер обмена.`, 'success');
+      }
+    }
+  });
+
+  document.addEventListener('click', (e) => {
+    if (e.target.classList.contains('code-header-tag')) {
+      const codeSection = e.target.nextElementSibling;
+      if (codeSection && codeSection.classList.contains('code-content')) {
+        const codeText = codeSection.textContent;
+        copyToClipboard(codeText, e.target);
+        showNotification(`Код класса '${e.target.getAttribute('data-title')}' скопирован в буфер обмена.`, 'success');
+        
+        codeSection.classList.add('highlight');
+        e.target.classList.add('copied');
+        setTimeout(() => {
+          codeSection.classList.remove('highlight');
+          e.target.classList.remove('copied');
+        }, 1000);
+      }
+    }
   });
 }
 
+function copyToClipboard(text, element) {
+  navigator.clipboard.writeText(text).then(() => {
+    element.classList.add('copied');
+    setTimeout(() => {
+      element.classList.remove('copied');
+    }, 1000);
+  }).catch(err => {
+    console.error('Ошибка копирования: ', err);
+    const textArea = document.createElement('textarea');
+    textArea.value = text;
+    document.body.appendChild(textArea);
+    textArea.select();
+    document.execCommand('copy');
+    document.body.removeChild(textArea);
+    
+    element.classList.add('copied');
+    setTimeout(() => {
+      element.classList.remove('copied');
+    }, 1000);
+  });
+}
+
+function updateFileNameDisplay(fileName) {
+  const fileNameElement = document.getElementById('fileName');
+  fileNameElement.innerHTML = '';
+  
+  if (fileName.includes('|')) {
+    const parts = fileName.split('|').map(part => part.trim());
+    parts.forEach((part, index) => {
+      const span = document.createElement('span');
+      span.className = 'filename-part';
+      span.setAttribute('data-filename', part);
+      span.textContent = part;
+      fileNameElement.appendChild(span);
+      
+      if (index < parts.length - 1) {
+        const separator = document.createElement('span');
+        separator.textContent = ' | ';
+        separator.style.color = 'var(--text-muted)';
+        fileNameElement.appendChild(separator);
+      }
+    });
+  } else {
+    const span = document.createElement('span');
+    span.className = 'filename-part';
+    span.setAttribute('data-filename', fileName);
+    span.textContent = fileName;
+    fileNameElement.appendChild(span);
+  }
+}
+
+function formatGeneratedCode(code) {
+  const sectionRegex = /<===([^=]+)===>/g;
+  let lastIndex = 0;
+  let sections = [];
+  let match;
+  
+  while ((match = sectionRegex.exec(code)) !== null) {
+    if (match.index > lastIndex) {
+      sections.push({
+        type: 'content',
+        content: code.substring(lastIndex, match.index)
+      });
+    }
+    
+    const title = match[1].trim();
+    sections.push({
+      type: 'header',
+      content: match[0],
+      title: title
+    });
+    
+    lastIndex = match.index + match[0].length;
+  }
+  
+  if (lastIndex < code.length) {
+    sections.push({
+      type: 'content',
+      content: code.substring(lastIndex)
+    });
+  }
+  
+  const container = document.createElement('div');
+  let currentContent = '';
+  
+  sections.forEach((section, index) => {
+    if (section.type === 'header') {
+      if (currentContent) {
+        const contentDiv = document.createElement('pre');
+        contentDiv.className = 'code-content';
+        contentDiv.textContent = currentContent;
+        container.appendChild(contentDiv);
+        container.appendChild(document.createElement('br'))
+        currentContent = '';
+      }
+      
+      const header = document.createElement('div');
+      header.className = 'code-header-tag';
+      header.textContent = section.content;
+      header.setAttribute('data-title', section.title);
+      container.appendChild(header);
+    } else {
+      currentContent += section.content;
+    }
+  });
+  
+  if (currentContent) {
+    const contentDiv = document.createElement('pre');
+    contentDiv.className = 'code-content';
+    contentDiv.textContent = currentContent;
+    container.appendChild(contentDiv);
+  }
+  
+  
+  return container;
+}
+
 document.addEventListener('DOMContentLoaded', () => {
-    storageManager.loadFromLocalStorage();
-    uiManager.updateFileName();
-    uiManager.renderAttributesTable();
-    setupEventListeners();
+  setupEventListeners();
+  setupCopyFunctionality(); 
 });
