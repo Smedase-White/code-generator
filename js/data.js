@@ -213,6 +213,7 @@ export class Data {
           fromParent: 'checkbox',
           selfAttr: 'checkbox',
           required: 'checkbox',
+          unique: 'checkbox',
           hasStandardSetter: 'checkbox',
           dictionaryBase: 'text',
           dictionaryAttr: 'text'
@@ -238,7 +239,8 @@ export class Data {
 
       catalog: {},
 
-      codeType: new DataValue(elements.codeTypeSelect, 'luaGenerator_codeType')
+      codeType: new DataValue(elements.codeTypeSelect, 'luaGenerator_codeType'),
+      repositoryLocation: new DataValue(elements.repositoryLocationSelect, 'luaGenerator_repositoryLocation')
     };
 
     this.data.classType.element.addEventListener('change', () => { 

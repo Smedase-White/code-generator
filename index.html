@@ -20,6 +20,14 @@
           <option value="array" disabled>Массив (скоро)</option>
           <option value="catalog" disabled>Каталог и элементы (скоро)</option>
         </select>
+        <label for="repositoryLocation">Расположение в репозитории:</label>
+        <select id="repositoryLocation">
+          <option value="Общее">Общее</option>
+          <option value="ЛКДЛ">ЛКДЛ</option>
+          <option value="ММОУ">ММОУ</option>
+          <option value="МПМ">МПМ</option>
+          <option value="СВРМ">СВРМ</option>
+        </select>
       </div>
 
       <!-- Форма для базового класса -->
@@ -53,6 +61,7 @@
               <th>Родительский</th>
               <th>Собственность</th>
               <th>Обязательность</th>
+              <th>Уникальность</th>
               <th>Сеттер</th>
               <th>Основа спр. сеттера</th>
               <th>Атрибут спр. сеттера</th>
@@ -62,7 +71,7 @@
           <tbody id="baseAttributesBody"></tbody>
           <tfoot>
             <tr>
-              <td colspan="10">
+              <td colspan="11">
                 <button id="addBaseAttribute" class="btn add-button-cell">Добавить атрибут</button>
               </td>
             </tr>
@@ -148,11 +157,11 @@
         <h2>Сгенерированный код</h2>
         <button id="generateCode" class="btn btn-success">Сгенерировать код</button>
         <div class="selector">
-          <label for="codeType">Тип кода:</label>
+          <label for="codeType">Тип ответа:</label>
           <select id="codeType">
             <option value="lua">Lua код</option>
             <option value="json">JSON запрос</option>
-            <option value="doc" disabled>Документация (скоро)</option>
+            <option value="doc">Документация</option>
           </select>
         </div>
       </div>

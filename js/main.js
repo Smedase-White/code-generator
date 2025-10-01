@@ -1,10 +1,12 @@
 import { LuaGenerator } from './lua-generator.js';
 import { JsonGenerator } from './json-generator.js';
+import { DocGenerator } from './doc-generator.js';
 import { typeWriterWithClear, animateButton, showNotification } from './animation.js';
 import { Data } from './data.js';
 
 const elements = {
   classTypeSelect: document.getElementById('classType'),
+  repositoryLocationSelect: document.getElementById('repositoryLocation'),
 
   baseForm: document.getElementById('baseForm'),
   classNameInput: document.getElementById('className'),
@@ -76,6 +78,8 @@ function generateCode() {
   let fileName = '';
   if (info.codeType === 'json') {
     fileName = 'request.json';
+  } else if (info.codeType === 'doc') {
+    fileName = `${get_snake_case(formInfo.className || formInfo.dictBase)}_documentation.html`;
   } else if (info.classType === 'dictionary' && info.codeType === 'lua') {
     const name = get_snake_case(formInfo.dictBase);
     fileName = `${name}_dictionary.lua | ${name}_record.lua`;
@@ -132,13 +136,24 @@ function generateCode() {
         formInfo.baseAttributes
       );
     }
+  } else if (info.codeType === 'doc') {
+    const docGenerator = new DocGenerator();
+    if (info.classType === 'dictionary') {
+      generatedCode = docGenerator.generateDictionaryDocumentation(info);
+    } else {
+      generatedCode = docGenerator.generateDocumentation(info);
+    }
   } else {
-    generatedCode = 'Документация пока не реализована';
+      generatedCode = 'Документация пока не реализована';
   }
 
-  const formattedCode = formatGeneratedCode(generatedCode);
-  elements.generatedCodePre.innerHTML = '';
-  elements.generatedCodePre.appendChild(formattedCode);
+  if (info.codeType === 'doc') {
+    displayHtmlDocumentation(generatedCode);
+  } else {
+    const formattedCode = formatGeneratedCode(generatedCode);
+    elements.generatedCodePre.innerHTML = '';
+    elements.generatedCodePre.appendChild(formattedCode);
+  }
   
   showNotification(`Код сгенерирован.`, 'success');
 
@@ -148,6 +163,27 @@ function generateCode() {
       elements.generatedCodePre.classList.remove('code-appear');
     }, 500);
   });*/
+}
+
+function displayHtmlDocumentation(htmlContent) {
+    elements.generatedCodePre.innerHTML = '';
+    
+    elements.generatedCodePre.classList.add('documentation-mode');
+    
+    const iframe = document.createElement('iframe');
+    iframe.className = 'documentation-iframe';
+    iframe.sandbox = 'allow-same-origin allow-scripts';
+    
+    elements.generatedCodePre.appendChild(iframe);
+    
+    iframe.onload = function() {
+        const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+        iframeDoc.open();
+        iframeDoc.write(htmlContent);
+        iframeDoc.close();
+    };
+    
+    iframe.src = 'about:blank';
 }
 
 function setupCopyFunctionality() {
