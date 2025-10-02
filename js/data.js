@@ -61,17 +61,41 @@ class RowElementValue {
     } else if (type === 'checkbox') {
       this.element = document.createElement('input');
       this.element.type = 'checkbox';
-      this.element.checked = !!value;
       
-      this.element.addEventListener('change', () => {
-        this.row.updateElement(this.column, this.element.checked);
-        animateButton(this.element);
-      });
+      if (column === 'hasStandardSetter') {
+        this.element.className = 'tri-state-checkbox';
+        
+        if (value === true) {
+          this.element.checked = true;
+          this.element.indeterminate = false;
+          this.element.dataset.state = 'true';
+        } else if (value === false) {
+          this.element.checked = false;
+          this.element.indeterminate = false;
+          this.element.dataset.state = 'false';
+        } else {
+          this.element.checked = false;
+          this.element.indeterminate = true;
+          this.element.dataset.state = 'null';
+        }
+        
+        this.element.addEventListener('click', (e) => {
+          e.preventDefault();
+          this.cycleTriState();
+        });
+        
+      } else {
+        this.element.checked = !!value;
+        this.element.addEventListener('change', () => {
+          this.row.updateElement(this.column, this.element.checked);
+          animateButton(this.element);
+        });
+      }
 
       const wrapper = document.createElement('label');
-      wrapper.className = 'toggle-switch';
+      wrapper.className = column === 'hasStandardSetter' ? 'tri-state-toggle' : 'toggle-switch';
       const span = document.createElement('span');
-      span.className = 'toggle-slider';
+      span.className = column === 'hasStandardSetter' ? 'tri-state-slider' : 'toggle-slider';
       wrapper.append(this.element, span);
 
       td.className = 'checkbox-cell';
@@ -92,6 +116,36 @@ class RowElementValue {
       map: '{"attr": "value"}'
     };
     return placeholders[column] || '';
+  }
+
+  cycleTriState() {
+    const currentState = this.element.dataset.state;
+    let newState, newValue;
+    
+    switch(currentState) {
+      case 'false':
+        newState = 'null';
+        newValue = null;
+        this.element.checked = false;
+        this.element.indeterminate = true;
+        break;
+      case 'null':
+        newState = 'true';
+        newValue = true;
+        this.element.checked = true;
+        this.element.indeterminate = false;
+        break;
+      case 'true':
+        newState = 'false';
+        newValue = false;
+        this.element.checked = false;
+        this.element.indeterminate = false;
+        break;
+    }
+    
+    this.element.dataset.state = newState;
+    this.row.updateElement(this.column, newValue);
+    animateButton(this.element);
   }
 }
 

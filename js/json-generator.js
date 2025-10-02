@@ -11,7 +11,9 @@ export class JsonGenerator {
     const parameters = {};
     
     attributes.forEach(attr => {
-      if (attr.selfAttr) {
+      if (attr.dictionaryBase && attr.dictionaryBase.trim()) {
+        parameters[attr.name] = "";
+      } else if (attr.selfAttr) {
         parameters[attr.name] = {
           "object": attr.type,
           "method_name": "initialize_from_table",

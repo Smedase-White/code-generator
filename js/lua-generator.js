@@ -35,31 +35,45 @@ export class LuaGenerator {
     return schema;
   }
 
+  generateCustomSetter(className, parentName, attr) {
+    let setter = `function ${className}:set_${attr.name}(value)\n`;
+    
+    if (attr.fromParent) {
+      setter += `  ${parentName}._instanceDict.set_${attr.name}(self, value)\n`;
+    } else {
+      setter += `  self.${attr.name} = value\n`;
+    }
+    
+    setter += `end`;
+    
+    return setter;
+  }
+
   generateLuaCode(codeInfo) {
     const className = codeInfo.className;
     const classNameRu = codeInfo.classNameRu;
     const parentName = codeInfo.parentName;
     const attributes = codeInfo.attributes;
 
-    let code = `<=== ${className} ===>`
+    let code = `<=== ${className} ===>`;
     code += `--ignore_migrations\n`;
     code += `--${classNameRu}\n`;
     
     if (parentName && parentName.trim()) {
-      code += `${this.generateImportString(parentName)}\n\n`
+      code += `${this.generateImportString(parentName)}\n\n`;
     }
 
     const imports = this.getAutoImports(attributes, className, parentName);
     if (imports.length > 0) {
-      code += imports.map(importClass => `${this.generateImportString(importClass)}`).join('\n')
-      code += `\n\n`
+      code += imports.map(importClass => `${this.generateImportString(importClass)}`).join('\n');
+      code += `\n\n`;
     }
     
     code += `local ${className} = class('${className}', ${parentName || 'BaseClass'})\n\n`;
     
     if (attributes.length > 0) {
       code += `${className}:initialize_attributes_types({\n`;
-      code += attributes.map(attr => `  ${attr.name} = { ${attr.type} }`).join(',\n')
+      code += attributes.map(attr => `  ${attr.name} = { ${attr.type} }`).join(',\n');
       code += `\n})\n\n`;
     }
     
@@ -67,12 +81,12 @@ export class LuaGenerator {
     if (newAttributes.length > 0) {
       code += `${className}:initialize_schema({\n`;
       code += `  attributes = {`;
-      code += newAttributes.map(attr => this.generateAttributeSchema(attr)).join(',')
+      code += newAttributes.map(attr => this.generateAttributeSchema(attr)).join(',');
       code += `\n  }\n`;
       code += `})\n\n`;
     }
     
-    const standardSetters = attributes.filter(attr => attr.hasStandardSetter);
+    const standardSetters = attributes.filter(attr => attr.hasStandardSetter !== false);
     if (standardSetters.length > 0) {
       code += `${className}:generate_setters({ `;
       code += standardSetters.map(attr => `'${attr.name}'`).join(', ');
@@ -82,7 +96,7 @@ export class LuaGenerator {
     const dictionarySetters = attributes.filter(attr => attr.dictionaryBase && attr.dictionaryBase.trim());
     if (dictionarySetters.length > 0) {
       code += `Dictionary:generate_setters_from_dictionaries(${className}, {`;
-      code += dictionarySetters.map(attr => `\n  ${attr.name} = "${attr.dictionaryBase}Dictionary.%s<${attr.dictionaryBase}Record>.${attr.dictionaryAttr}<${attr.type}>"`).join(',')
+      code += dictionarySetters.map(attr => `\n  ${attr.name} = "${attr.dictionaryBase}Dictionary.%s<${attr.dictionaryBase}Record>.${attr.dictionaryAttr}<${attr.type}>"`).join(',');
       code += `\n})\n\n`;
     }
     
@@ -91,8 +105,8 @@ export class LuaGenerator {
 
       const requiredAttributes = newAttributes.filter(attr => attr.required);
       if (requiredAttributes.length > 0) {
-        code += requiredAttributes.map(attr => `  Utils:key_exists(data, '${attr.name}')`).join('\n')
-        code += '\n\n'
+        code += requiredAttributes.map(attr => `  Utils:key_exists(data, '${attr.name}')`).join('\n');
+        code += '\n\n';
       }
 
       if (parentName && parentName.trim()) {
@@ -104,7 +118,7 @@ export class LuaGenerator {
       
       newAttributes.forEach(attr => {
         if (attr.name) {
-          if (attr.hasStandardSetter) {
+          if (attr.hasStandardSetter === true || attr.hasStandardSetter === null) {
             code += `  instance:set_${attr.name}(data.${attr.name})\n`;
           } else if (attr.dictionaryBase) {
             code += `  instance:set_${attr.name}_from_dictionary(data.${attr.name})\n`;
@@ -116,6 +130,12 @@ export class LuaGenerator {
       
       code += `\n  return instance\n`;
       code += `end\n\n`;
+    }
+    
+    const customSetters = attributes.filter(attr => attr.hasStandardSetter === true);
+    if (customSetters.length > 0) {
+      code += customSetters.map(attr => this.generateCustomSetter(className, parentName, attr)).join('\n');
+      code += `\n\n`;
     }
     
     code += `return ${className}`;
