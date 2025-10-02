@@ -1,9 +1,11 @@
 import { animateNewRow, animateDeleteRow, showNotification, animateButton } from './animation.js';
 
 class DataValue {
-  constructor(element, storage_key) {
+  constructor(element, storage_key, isRequired = false) {
     this.element = element;
     this.storage_key = storage_key;
+    this.isRequired = isRequired;
+    
     if (this.storage_key) { 
       this.value = localStorage.getItem(this.storage_key); 
     }
@@ -14,15 +16,25 @@ class DataValue {
       this.value = this.element.value;
     }
     
+    if (this.isRequired && this.element.placeholder) {
+      this.element.placeholder += ' *';
+    }
+    
     this.element.addEventListener('change', () => {
       this.value = this.element.value;
       if (this.storage_key) {
         localStorage.setItem(this.storage_key, this.value);
       }
+      this.validateField();
     });
     
     this.element.addEventListener('blur', () => {
       this.element.parentElement.style.transform = 'translateY(0)';
+      this.validateField();
+    });
+    
+    this.element.addEventListener('focus', () => {
+      this.clearValidation();
     });
   }
 
@@ -32,13 +44,29 @@ class DataValue {
     if (this.storage_key) {
       localStorage.setItem(this.storage_key, this.value);
     }
+    this.validateField();
+  }
+
+  validateField() {
+    if (this.isRequired && (!this.value || this.value.trim() === '')) {
+      this.element.classList.add('required-error');
+      return false;
+    } else {
+      this.element.classList.remove('required-error');
+      return true;
+    }
+  }
+
+  clearValidation() {
+    this.element.classList.remove('required-error');
   }
 }
 
 class RowElementValue {
-  constructor(row, column, type, value) {
+  constructor(row, column, type, value, isRequired = false) {
     this.row = row;
     this.column = column;
+    this.isRequired = isRequired;
     
     const td = document.createElement('td');
     
@@ -46,14 +74,20 @@ class RowElementValue {
       this.element = document.createElement('input');
       this.element.type = 'text';
       this.element.value = value ? value : '';
-      this.element.placeholder = this.getPlaceholder(column);
+      this.element.placeholder = this.getPlaceholder(column, isRequired);
       
       this.element.addEventListener('change', () => { 
         this.row.updateElement(this.column, this.element.value); 
+        this.validateField();
       });
       
       this.element.addEventListener('blur', () => {
         td.style.transform = 'translateY(0)';
+        this.validateField();
+      });
+
+      this.element.addEventListener('focus', () => {
+        this.clearValidation();
       });
 
       td.appendChild(this.element);
@@ -61,17 +95,41 @@ class RowElementValue {
     } else if (type === 'checkbox') {
       this.element = document.createElement('input');
       this.element.type = 'checkbox';
-      this.element.checked = !!value;
       
-      this.element.addEventListener('change', () => {
-        this.row.updateElement(this.column, this.element.checked);
-        animateButton(this.element);
-      });
+      if (column === 'hasStandardSetter' || column === 'methodType') {
+        this.element.className = 'tri-state-checkbox';
+        
+        if (value === true) {
+          this.element.checked = true;
+          this.element.indeterminate = false;
+          this.element.dataset.state = 'true';
+        } else if (value === false) {
+          this.element.checked = false;
+          this.element.indeterminate = false;
+          this.element.dataset.state = 'false';
+        } else {
+          this.element.checked = false;
+          this.element.indeterminate = true;
+          this.element.dataset.state = 'null';
+        }
+        
+        this.element.addEventListener('click', (e) => {
+          e.preventDefault();
+          this.cycleTriState();
+        });
+        
+      } else {
+        this.element.checked = !!value;
+        this.element.addEventListener('change', () => {
+          this.row.updateElement(this.column, this.element.checked);
+          animateButton(this.element);
+        });
+      }
 
       const wrapper = document.createElement('label');
-      wrapper.className = 'toggle-switch';
+      wrapper.className = column === 'hasStandardSetter' || column === 'methodType' ? 'tri-state-toggle' : 'toggle-switch';
       const span = document.createElement('span');
-      span.className = 'toggle-slider';
+      span.className = column === 'hasStandardSetter' || column === 'methodType' ? 'tri-state-slider' : 'toggle-slider';
       wrapper.append(this.element, span);
 
       td.className = 'checkbox-cell';
@@ -81,17 +139,69 @@ class RowElementValue {
     this.row.element.appendChild(td);
   }
 
-  getPlaceholder(column) {
+  getPlaceholder(column, isRequired) {
     const placeholders = {
-      name: 'attribute_name',
-      nameRu: 'Имя атрибута',
-      type: 'AttrType',
+      name: 'some_name',
+      nameRu: 'Какое-то имя',
+      type: 'ClassType',
       dictionaryBase: 'DictBase',
       dictionaryAttr: 'dict_attribute',
+      parameters: 'param1, param2',
+      description: 'Описание',
       key: 'key',
       map: '{"attr": "value"}'
     };
-    return placeholders[column] || '';
+    let placeholder = placeholders[column] || '';
+    
+    if (isRequired && placeholder) {
+      placeholder += ' *';
+    }
+    
+    return placeholder;
+  }
+
+  cycleTriState() {
+    const currentState = this.element.dataset.state;
+    let newState, newValue;
+    
+    switch(currentState) {
+      case 'false':
+        newState = 'null';
+        newValue = null;
+        this.element.checked = false;
+        this.element.indeterminate = true;
+        break;
+      case 'null':
+        newState = 'true';
+        newValue = true;
+        this.element.checked = true;
+        this.element.indeterminate = false;
+        break;
+      case 'true':
+        newState = 'false';
+        newValue = false;
+        this.element.checked = false;
+        this.element.indeterminate = false;
+        break;
+    }
+    
+    this.element.dataset.state = newState;
+    this.row.updateElement(this.column, newValue);
+    animateButton(this.element);
+  }
+
+  validateField() {
+    if (this.isRequired && this.element.type === 'text' && (!this.element.value || this.element.value.trim() === '')) {
+      this.element.classList.add('required-error');
+      return false;
+    } else {
+      this.element.classList.remove('required-error');
+      return true;
+    }
+  }
+
+  clearValidation() {
+    this.element.classList.remove('required-error');
   }
 }
 
@@ -102,7 +212,7 @@ class TableRow {
     this.element = document.createElement('tr');
     
     Object.entries(columns).forEach(([column, data]) => {
-      new RowElementValue(this, column, data.type, data.value);
+      new RowElementValue(this, column, data.type, data.value, data.isRequired);
     });
 
     const deleteTd = document.createElement('td');
@@ -127,6 +237,21 @@ class TableRow {
     const index = this.table.rows.indexOf(this);
     this.table.value[index][column] = value;
     this.table.saveToStorage();
+  }
+
+  validateFields() {
+    let isValid = true;
+    const inputs = this.element.querySelectorAll('input[type="text"]');
+    inputs.forEach(input => {
+      const isRequired = input.placeholder.includes('*');
+      if (isRequired && (!input.value || input.value.trim() === '')) {
+        input.classList.add('required-error');
+        isValid = false;
+      } else {
+        input.classList.remove('required-error');
+      }
+    });
+    return isValid;
   }
 }
 
@@ -161,8 +286,12 @@ export class TableValue {
     this.saveToStorage();
 
     let data = {};
-    Object.entries(this.columns).forEach(([column, type]) => {
-      data[column] = { type: type, value: values[column] };
+    Object.entries(this.columns).forEach(([column, columnConfig]) => {
+      data[column] = { 
+        type: columnConfig.type, 
+        value: values[column],
+        isRequired: columnConfig.isRequired || false
+      };
     });
     
     const row = new TableRow(this, data);
@@ -193,6 +322,20 @@ export class TableValue {
     
     this.saveToStorage();
   }
+
+  validateFields() {
+    let isValid = true;
+    if (this.rows.length === 0) {
+      return true;
+    }
+    
+    this.rows.forEach(row => {
+      if (!row.validateFields()) {
+        isValid = false;
+      }
+    });
+    return isValid;
+  }
 }
 
 export class Data {
@@ -203,35 +346,42 @@ export class Data {
       classType: new DataValue(elements.classTypeSelect, 'luaGenerator_classType'),
 
       base: {
-        className: new DataValue(elements.classNameInput, 'luaGenerator_className'),
-        classNameRu: new DataValue(elements.classNameRuInput, 'luaGenerator_classNameRu'),
+        className: new DataValue(elements.classNameInput, 'luaGenerator_className', true),
+        classNameRu: new DataValue(elements.classNameRuInput, 'luaGenerator_classNameRu', true),
         parentName: new DataValue(elements.parentNameInput, 'luaGenerator_parentName'),
         baseAttributes: new TableValue(elements.baseAttributesBody, elements.addBaseAttributeBtn, 'luaGenerator_attributes', {
-          name: 'text',
-          nameRu: 'text',
-          type: 'text',
-          fromParent: 'checkbox',
-          selfAttr: 'checkbox',
-          required: 'checkbox',
-          unique: 'checkbox',
-          hasStandardSetter: 'checkbox',
-          dictionaryBase: 'text',
-          dictionaryAttr: 'text'
+          name: { type: 'text', isRequired: true },
+          nameRu: { type: 'text', isRequired: true },
+          type: { type: 'text', isRequired: true },
+          fromParent: { type: 'checkbox' },
+          selfAttr: { type: 'checkbox' },
+          required: { type: 'checkbox' },
+          unique: { type: 'checkbox' },
+          hasStandardSetter: { type: 'checkbox' },
+          dictionaryBase: { type: 'text' },
+          dictionaryAttr: { type: 'text' }
+        }),
+        baseMethods: new TableValue(elements.baseMethodsBody, elements.addBaseMethodBtn, 'luaGenerator_methods', {
+          name: { type: 'text', isRequired: true },
+          nameRu: { type: 'text', isRequired: true },
+          methodType: { type: 'checkbox' },
+          parameters: { type: 'text' },
+          description: { type: 'text' }
         })
       },
 
       dictionary: {
-        dictBase: new DataValue(elements.dictBaseInput, 'luaGenerator_dictBase'),
-        dictNameRu: new DataValue(elements.dictNameRuInput, 'luaGenerator_dictNameRu'),
+        dictBase: new DataValue(elements.dictBaseInput, 'luaGenerator_dictBase', true),
+        dictNameRu: new DataValue(elements.dictNameRuInput, 'luaGenerator_dictNameRu', true),
         recordAttributes: new TableValue(elements.recordAttributesBody, elements.addRecordAttributeBtn, 'luaGenerator_recordAttributes', {
-          name: 'text',
-          nameRu: 'text',
-          type: 'text'
+          name: { type: 'text', isRequired: true },
+          nameRu: { type: 'text', isRequired: true },
+          type: { type: 'text', isRequired: true }
         }),
         recordValues: new TableValue(elements.recordValuesBody, elements.addRecordValueBtn, 'luaGenerator_recordValues', {
-          key: 'text',
-          nameRu: 'text',
-          map: 'text'
+          key: { type: 'text', isRequired: true },
+          nameRu: { type: 'text', isRequired: true },
+          map: { type: 'text', isRequired: true }
         })
       },
 
@@ -262,17 +412,41 @@ export class Data {
   }
 
   getValue() {
+    const classType = this.data.classType.value;
     const result = {
-      classType: this.data.classType.value,
+      classType: classType,
       codeType: this.data.codeType.value
     };
   
-    result[classType.value] = {}
-    Object.entries(this.data[classType.value]).forEach(([key, data]) => {
-      result[classType.value][key] = data.value
+    result[classType] = {};
+    Object.entries(this.data[classType]).forEach(([key, data]) => {
+      result[classType][key] = data.value;
     });
 
     return result;
+  }
+
+  validate() {
+    let isValid = true;
+    const classType = this.data.classType.value;
+    
+    const currentFormData = this.data[classType];
+    
+    if (currentFormData) {
+      Object.values(currentFormData).forEach(dataItem => {
+        if (dataItem && typeof dataItem.validateField === 'function') {
+          if (!dataItem.validateField()) {
+            isValid = false;
+          }
+        } else if (dataItem && typeof dataItem.validateFields === 'function') {
+          if (!dataItem.validateFields()) {
+            isValid = false;
+          }
+        }
+      });
+    }
+    
+    return isValid;
   }
 
   saveToFile() {
@@ -337,7 +511,9 @@ export class Data {
     }
 
     Object.entries(data[data.classType]).forEach(([key, value]) => {
-      this.data[data.classType][key].updateValue(value)
+      if (this.data[data.classType][key]) {
+        this.data[data.classType][key].updateValue(value);
+      }
     });
 
     this.updateForm();

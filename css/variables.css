@@ -32,6 +32,7 @@
     --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.3);
     --shadow-card-hover: 0 8px 25px rgba(0, 0, 0, 0.4);
     --shadow-input-focus: 0 0 8px rgba(100, 181, 246, 0.3);
+    --shadow-input-error: 0 0 8px rgba(244, 67, 54, 0.3);
     --shadow-button: 0 2px 4px rgba(0, 0, 0, 0.2);
     --shadow-button-hover: 0 4px 12px rgba(0, 0, 0, 0.3);
     
@@ -74,6 +75,7 @@
     /* Цвета для анимаций */
     --color-highlight: rgba(100, 181, 246, 0.2);
     --color-success-light: rgba(76, 175, 80, 0.2);
+    --color-error-light: rgba(244, 67, 54, 0.2);
     
     /* Максимальные ширины */
     --max-width-container: 1800px;

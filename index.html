@@ -77,6 +77,30 @@
             </tr>
           </tfoot>
         </table>
+
+        <h2>Методы класса</h2>
+
+        <table id="methodsTable">
+          <thead>
+            <tr>
+              <th>Имя</th>
+              <th>Русское имя</th>
+              <th>Тип метода</th>
+              <th>Параметры</th>
+              <th>Описание</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="baseMethodsBody"></tbody>
+          <tfoot>
+            <tr>
+              <td colspan="6">
+                <button id="addBaseMethod" class="btn add-button-cell">Добавить метод</button>
+              </td>
+            </tr>
+          </tfoot>
+        </table>
+
       </div>
 
       <!-- Форма для справочника и записи -->
@@ -87,11 +111,11 @@
         <div class="class-info-form">
           <div class="form-group">
             <label for="dictBase">Основа справочника:</label>
-            <input type="text" id="dictBase">
+            <input type="text" id="dictBase" placeholder="DictBase">
           </div>
           <div class="form-group">
             <label for="dictNameRu">Русское имя:</label>
-            <input type="text" id="dictNameRu">
+            <input type="text" id="dictNameRu" placeholder="Имя справочника">
           </div>
         </div>
 

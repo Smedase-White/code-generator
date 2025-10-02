@@ -115,6 +115,26 @@ input[type="text"]:focus::placeholder {
     transform: translateX(5px);
 }
 
+/* ===== REQUIRED FIELD STYLES ===== */
+.required-error {
+    border-color: var(--color-danger) !important;
+    box-shadow: var(--shadow-input-error) !important;
+    background: var(--color-error-light) !important;
+}
+
+.required-error:focus {
+    border-color: var(--color-danger) !important;
+    box-shadow: 0 0 8px rgba(244, 67, 54, 0.5) !important;
+}
+
+input[type="text"]:not(:focus)::placeholder {
+    position: relative;
+}
+
+.required-error {
+    animation: shake 0.5s ease-in-out;
+}
+
 /* ===== BUTTONS ===== */
 .btn {
     padding: var(--padding-button);
@@ -238,6 +258,10 @@ th {
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
+.checkbox-cell input[type="checkbox"]:hover + .toggle-slider {
+    background: var(--text-muted);
+}
+
 .checkbox-cell input[type="checkbox"]:checked + .toggle-slider {
     background: var(--color-success);
 }
@@ -246,11 +270,73 @@ th {
     transform: translateX(26px);
 }
 
-.checkbox-cell input[type="checkbox"]:hover + .toggle-slider {
+.checkbox-cell input[type="checkbox"]:checked:hover + .toggle-slider {
+    background: var(--color-success-hover);
+}
+
+/* ===== TRY-STATE TOGGLE SWITCH ===== */
+.tri-state-toggle {
+    position: relative;
+    display: inline-block;
+    width: var(--toggle-width);
+    height: var(--toggle-height);
+    cursor: pointer;
+}
+
+.tri-state-slider {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: var(--border-input);
+    border-radius: var(--toggle-height);
+    transition: var(--transition-normal);
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.tri-state-slider:before {
+    position: absolute;
+    content: "";
+    height: var(--toggle-slider-size);
+    width: var(--toggle-slider-size);
+    left: 3px; bottom: 3px;
+    background: white;
+    border-radius: 50%;
+    transition: var(--transition-normal);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.tri-state-checkbox[data-state="false"] + .tri-state-slider {
+    background: var(--border-input);
+}
+
+.tri-state-checkbox[data-state="false"] + .tri-state-slider:before {
+    transform: translateX(0);
+}
+
+.tri-state-checkbox[data-state="false"]:hover + .tri-state-slider {
     background: var(--text-muted);
 }
 
-.checkbox-cell input[type="checkbox"]:checked:hover + .toggle-slider {
+.tri-state-checkbox[data-state="null"] + .tri-state-slider {
+    background: var(--color-warning);
+}
+
+.tri-state-checkbox[data-state="null"] + .tri-state-slider:before {
+    transform: translateX(13px);
+}
+
+.tri-state-checkbox[data-state="null"]:hover + .tri-state-slider {
+    background: var(--color-warning-hover);
+}
+
+.tri-state-checkbox[data-state="true"] + .tri-state-slider {
+    background: var(--color-success);
+}
+
+.tri-state-checkbox[data-state="true"] + .tri-state-slider:before {
+    transform: translateX(26px);
+}
+
+.tri-state-checkbox[data-state="true"]:hover + .tri-state-slider {
     background: var(--color-success-hover);
 }
 
@@ -472,6 +558,13 @@ th {
     70% { transform: scale(0.9); }
     100% { opacity: 1; transform: scale(1); }
 }
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+}
+
 
 #generatedCode.documentation-mode {
     min-height: 600px;
