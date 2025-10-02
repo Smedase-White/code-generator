@@ -115,6 +115,26 @@ input[type="text"]:focus::placeholder {
     transform: translateX(5px);
 }
 
+/* ===== REQUIRED FIELD STYLES ===== */
+.required-error {
+    border-color: var(--color-danger) !important;
+    box-shadow: var(--shadow-input-error) !important;
+    background: var(--color-error-light) !important;
+}
+
+.required-error:focus {
+    border-color: var(--color-danger) !important;
+    box-shadow: 0 0 8px rgba(244, 67, 54, 0.5) !important;
+}
+
+input[type="text"]:not(:focus)::placeholder {
+    position: relative;
+}
+
+.required-error {
+    animation: shake 0.5s ease-in-out;
+}
+
 /* ===== BUTTONS ===== */
 .btn {
     padding: var(--padding-button);
@@ -538,6 +558,13 @@ th {
     70% { transform: scale(0.9); }
     100% { opacity: 1; transform: scale(1); }
 }
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+}
+
 
 #generatedCode.documentation-mode {
     min-height: 600px;

@@ -71,6 +71,12 @@ function setupEventListeners() {
 
 function generateCode() {
   animateButton(elements.generateCodeBtn);
+  
+  const isValid = data.validate();
+  if (!isValid) {
+    showNotification('Есть незаполненные обязательные поля', 'error');
+    return;
+  }
 
   const info = data.getValue();
   const formInfo = info[info.classType];
@@ -156,13 +162,6 @@ function generateCode() {
   }
   
   showNotification(`Код сгенерирован.`, 'success');
-
-  /*typeWriterWithClear(elements.generatedCodePre, formattedCode, 1, () => {
-    elements.generatedCodePre.classList.add('code-appear');
-    setTimeout(() => {
-      elements.generatedCodePre.classList.remove('code-appear');
-    }, 500);
-  });*/
 }
 
 function displayHtmlDocumentation(htmlContent) {
@@ -328,7 +327,6 @@ function formatGeneratedCode(code) {
     contentDiv.textContent = currentContent;
     container.appendChild(contentDiv);
   }
-  
   
   return container;
 }
