@@ -35,6 +35,14 @@ export class LuaGenerator {
     return schema;
   }
 
+  generateMethodSchema(method) {
+  let schema = `\n    ${method.name} = {\n`;
+  schema += `      description = '${(method.description || method.nameRu).replace(/'/g, "\\'")}'`;
+  
+  schema += `\n    }`;
+  return schema;
+}
+
   generateCustomSetter(className, parentName, attr) {
     let setter = `function ${className}:set_${attr.name}(value)\n`;
     
@@ -49,11 +57,57 @@ export class LuaGenerator {
     return setter;
   }
 
+  generateMethod(className, methodInfo, isStatic) {
+    const isStaticWithInstanceCall = methodInfo.methodType === null;
+    
+    let method = '';
+    
+    if (isStatic) {
+      method += `function ${className}.static:${methodInfo.name}(params)\n`;
+
+      if (methodInfo.parameters) {
+        const params = methodInfo.parameters.split(',').map(p => p.trim());
+        params.forEach(param => {
+          if (param && param !== 'params') {
+            method += `  Utils:key_exists(params, '${param}')\n`;
+          }
+        });
+      }
+      
+      if (isStaticWithInstanceCall) {
+        method += `  local instance = self:find(params)\n\n`;
+        method += `  instance:${methodInfo.name}(`;
+        
+        if (methodInfo.parameters) {
+          const params = methodInfo.parameters.split(',').map(p => p.trim());
+          const instanceParams = params.filter(p => p && p !== 'params').join(', ');
+          method += instanceParams;
+        }
+        
+        method += `)\n\n`;
+        method += `  return instance\n`;
+      } else {
+        method += `  -- TODO ${methodInfo.description || methodInfo.nameRu}\n`;
+      }
+      
+      method += `end\n\n`;
+    } else {
+      method += `function ${className}:${methodInfo.name}(`;
+      method += methodInfo.parameters || '';
+      method += `)\n`;
+      method += `  -- TODO ${methodInfo.description || methodInfo.nameRu}\n`;
+      method += `end\n\n`;
+    }
+    
+    return method;
+  }
+
   generateLuaCode(codeInfo) {
     const className = codeInfo.className;
     const classNameRu = codeInfo.classNameRu;
     const parentName = codeInfo.parentName;
     const attributes = codeInfo.attributes;
+    const methods = codeInfo.methods;
 
     let code = `<=== ${className} ===>`;
     code += `--ignore_migrations\n`;
@@ -78,12 +132,22 @@ export class LuaGenerator {
     }
     
     const newAttributes = attributes.filter(attr => !attr.fromParent);
-    if (newAttributes.length > 0) {
+     if (newAttributes.length > 0 || methods.length > 0) {
       code += `${className}:initialize_schema({\n`;
-      code += `  attributes = {`;
-      code += newAttributes.map(attr => this.generateAttributeSchema(attr)).join(',');
-      code += `\n  }\n`;
-      code += `})\n\n`;
+      if (newAttributes.length > 0) {
+        code += `  attributes = {`;
+        code += newAttributes.map(attr => this.generateAttributeSchema(attr)).join(',');
+        code += `\n  }`;
+      }
+      if (methods.length > 0) {
+        if (newAttributes.length > 0) {
+          code += `,`;
+        }
+        code += `\n  methods = {`;
+        code += methods.map(method => this.generateMethodSchema(method)).join(',');
+        code += `\n  }`;
+      }
+      code += `\n})\n\n`;
     }
     
     const standardSetters = attributes.filter(attr => attr.hasStandardSetter !== false);
@@ -131,12 +195,22 @@ export class LuaGenerator {
       code += `\n  return instance\n`;
       code += `end\n\n`;
     }
+
+    const staticMethods = methods.filter(m => m.methodType === false || m.methodType === null);
+    staticMethods.forEach(method => {
+      code += this.generateMethod(codeInfo.className, method, true);
+    });
     
     const customSetters = attributes.filter(attr => attr.hasStandardSetter === true);
     if (customSetters.length > 0) {
       code += customSetters.map(attr => this.generateCustomSetter(className, parentName, attr)).join('\n');
       code += `\n\n`;
     }
+    
+    const instanceMethods = methods.filter(m => m.methodType === true || m.methodType === null);
+    instanceMethods.forEach(method => {
+      code += this.generateMethod(codeInfo.className, method, false);
+    });
     
     code += `return ${className}`;
     

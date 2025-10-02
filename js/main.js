@@ -14,6 +14,8 @@ const elements = {
   parentNameInput: document.getElementById('parentName'),
   baseAttributesBody: document.getElementById('baseAttributesBody'),
   addBaseAttributeBtn: document.getElementById('addBaseAttribute'),
+  baseMethodsBody: document.getElementById('baseMethodsBody'),
+  addBaseMethodBtn: document.getElementById('addBaseMethod'),
 
   dictionaryForm: document.getElementById('dictionaryForm'),
   dictBaseInput: document.getElementById('dictBase'),
@@ -129,7 +131,8 @@ function generateCode() {
         className: formInfo.className,
         classNameRu: formInfo.classNameRu,
         parentName: formInfo.parentName,
-        attributes: formInfo.baseAttributes
+        attributes: formInfo.baseAttributes,
+        methods: formInfo.baseMethods
       };
       generatedCode = luaGenerator.generateLuaCode(baseCodeInfo);
     }

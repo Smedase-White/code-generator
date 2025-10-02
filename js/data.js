@@ -96,7 +96,7 @@ class RowElementValue {
       this.element = document.createElement('input');
       this.element.type = 'checkbox';
       
-      if (column === 'hasStandardSetter') {
+      if (column === 'hasStandardSetter' || column === 'methodType') {
         this.element.className = 'tri-state-checkbox';
         
         if (value === true) {
@@ -127,9 +127,9 @@ class RowElementValue {
       }
 
       const wrapper = document.createElement('label');
-      wrapper.className = column === 'hasStandardSetter' ? 'tri-state-toggle' : 'toggle-switch';
+      wrapper.className = column === 'hasStandardSetter' || column === 'methodType' ? 'tri-state-toggle' : 'toggle-switch';
       const span = document.createElement('span');
-      span.className = column === 'hasStandardSetter' ? 'tri-state-slider' : 'toggle-slider';
+      span.className = column === 'hasStandardSetter' || column === 'methodType' ? 'tri-state-slider' : 'toggle-slider';
       wrapper.append(this.element, span);
 
       td.className = 'checkbox-cell';
@@ -141,11 +141,13 @@ class RowElementValue {
 
   getPlaceholder(column, isRequired) {
     const placeholders = {
-      name: 'attribute_name',
-      nameRu: 'Имя атрибута',
-      type: 'AttrType',
+      name: 'some_name',
+      nameRu: 'Какое-то имя',
+      type: 'ClassType',
       dictionaryBase: 'DictBase',
       dictionaryAttr: 'dict_attribute',
+      parameters: 'param1, param2',
+      description: 'Описание',
       key: 'key',
       map: '{"attr": "value"}'
     };
@@ -358,6 +360,13 @@ export class Data {
           hasStandardSetter: { type: 'checkbox' },
           dictionaryBase: { type: 'text' },
           dictionaryAttr: { type: 'text' }
+        }),
+        baseMethods: new TableValue(elements.baseMethodsBody, elements.addBaseMethodBtn, 'luaGenerator_methods', {
+          name: { type: 'text', isRequired: true },
+          nameRu: { type: 'text', isRequired: true },
+          methodType: { type: 'checkbox' },
+          parameters: { type: 'text' },
+          description: { type: 'text' }
         })
       },
 
