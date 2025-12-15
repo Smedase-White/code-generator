@@ -380,7 +380,7 @@ export class Data {
         }),
         recordValues: new TableValue(elements.recordValuesBody, elements.addRecordValueBtn, 'luaGenerator_recordValues', {
           key: { type: 'text', isRequired: true },
-          nameRu: { type: 'text', isRequired: true },
+          nameRu: { type: 'text' },
           map: { type: 'text', isRequired: true }
         })
       },

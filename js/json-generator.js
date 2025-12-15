@@ -64,13 +64,19 @@ export class JsonGenerator {
         }
       });
       
-      return {
+      if (record.nameRu)
+        return {
         "key": record.key,
         "value": valueObject,
         "schema": {
           "name_ru": record.nameRu,
           "self_attr": true
         }
+      };
+
+      return {
+        "key": record.key,
+        "value": valueObject
       };
     });
 

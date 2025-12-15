@@ -107,7 +107,7 @@ export class LuaGenerator {
     const classNameRu = codeInfo.classNameRu;
     const parentName = codeInfo.parentName;
     const attributes = codeInfo.attributes;
-    const methods = codeInfo.methods;
+    const methods = codeInfo.methods || [];
 
     let code = `<=== ${className} ===>`;
     code += `--ignore_migrations\n`;
