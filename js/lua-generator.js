@@ -107,7 +107,7 @@ export class LuaGenerator {
     const classNameRu = codeInfo.classNameRu;
     const parentName = codeInfo.parentName;
     const attributes = codeInfo.attributes;
-    const methods = codeInfo.methods;
+    const methods = codeInfo.methods || [];
 
     let code = `<=== ${className} ===>`;
     code += `--ignore_migrations\n`;
@@ -150,7 +150,7 @@ export class LuaGenerator {
       code += `\n})\n\n`;
     }
     
-    const standardSetters = attributes.filter(attr => attr.hasStandardSetter !== false);
+    const standardSetters = attributes.filter(attr => attr.hasStandardSetter === true || attr.hasStandardSetter === false);
     if (standardSetters.length > 0) {
       code += `${className}:generate_setters({ `;
       code += standardSetters.map(attr => `'${attr.name}'`).join(', ');
@@ -182,7 +182,7 @@ export class LuaGenerator {
       
       newAttributes.forEach(attr => {
         if (attr.name) {
-          if (attr.hasStandardSetter === true || attr.hasStandardSetter === null) {
+          if (attr.hasStandardSetter === true || attr.hasStandardSetter === false) {
             code += `  instance:set_${attr.name}(data.${attr.name})\n`;
           } else if (attr.dictionaryBase) {
             code += `  instance:set_${attr.name}_from_dictionary(data.${attr.name})\n`;
