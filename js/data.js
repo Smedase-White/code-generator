@@ -105,11 +105,11 @@ class RowElementValue {
           this.element.dataset.state = 'true';
         } else if (value === false) {
           this.element.checked = false;
-          this.element.indeterminate = false;
+          this.element.indeterminate = true;
           this.element.dataset.state = 'false';
         } else {
           this.element.checked = false;
-          this.element.indeterminate = true;
+          this.element.indeterminate = false;
           this.element.dataset.state = 'null';
         }
         
@@ -166,22 +166,22 @@ class RowElementValue {
     
     switch(currentState) {
       case 'false':
-        newState = 'null';
-        newValue = null;
-        this.element.checked = false;
-        this.element.indeterminate = true;
-        break;
-      case 'null':
         newState = 'true';
         newValue = true;
         this.element.checked = true;
         this.element.indeterminate = false;
         break;
-      case 'true':
+      case 'null':
         newState = 'false';
         newValue = false;
         this.element.checked = false;
         this.element.indeterminate = false;
+        break;
+      case 'true':
+        newState = 'null';
+        newValue = null;
+        this.element.checked = false;
+        this.element.indeterminate = true;
         break;
     }
     
@@ -356,7 +356,6 @@ export class Data {
           fromParent: { type: 'checkbox' },
           selfAttr: { type: 'checkbox' },
           required: { type: 'checkbox' },
-          unique: { type: 'checkbox' },
           hasStandardSetter: { type: 'checkbox' },
           dictionaryBase: { type: 'text' },
           dictionaryAttr: { type: 'text' }
