@@ -127,7 +127,7 @@ export class LuaGenerator {
     
     if (attributes.length > 0) {
       code += `${className}:initialize_attributes_types({\n`;
-      code += attributes.map(attr => `  ${attr.name} = { ${attr.type} }`).join(',\n');
+      code += attributes.map(attr => `  ${attr.name} = ${attr.type}`).join(',\n');
       code += `\n})\n\n`;
     }
     
