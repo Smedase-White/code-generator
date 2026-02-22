@@ -25,23 +25,22 @@ export class LuaGenerator {
     return `local ${className} = BaseClass:require('${className}')`;
   }
 
-  generateAttributeSchema(attr) {
-    let schema = `\n    ${attr.name} = {\n`;
+  generateAttributeInfo(attr) {
+    let schema = `    ${attr.name} = {\n`;
+    schema += `      type = ${attr.type},\n`;
     schema += `      name_ru = '${attr.nameRu || attr.name}'`;
+    
     if (attr.selfAttr) {
         schema += `,\n      self_attr = true`;
     }
+    
+    if (attr.hasStandardSetter === true || attr.hasStandardSetter === false) {
+      schema += `,\n      with_setters = true`;
+    }
+    
     schema += `\n    }`;
     return schema;
   }
-
-  generateMethodSchema(method) {
-  let schema = `\n    ${method.name} = {\n`;
-  schema += `      description = '${(method.description || method.nameRu).replace(/'/g, "\\'")}'`;
-  
-  schema += `\n    }`;
-  return schema;
-}
 
   generateCustomSetter(className, parentName, attr) {
     let setter = `function ${className}:set_${attr.name}(value)\n`;
@@ -125,42 +124,22 @@ export class LuaGenerator {
     
     code += `local ${className} = class('${className}', ${parentName || 'BaseClass'})\n\n`;
     
-    if (attributes.length > 0) {
-      code += `${className}:initialize_attributes_types({\n`;
-      code += attributes.map(attr => `  ${attr.name} = ${attr.type}`).join(',\n');
-      code += `\n})\n\n`;
-    }
-    
     const newAttributes = attributes.filter(attr => !attr.fromParent);
-     if (newAttributes.length > 0 || methods.length > 0) {
-      code += `${className}:initialize_schema({\n`;
-      if (newAttributes.length > 0) {
-        code += `  attributes = {`;
-        code += newAttributes.map(attr => this.generateAttributeSchema(attr)).join(',');
-        code += `\n  }`;
-      }
-      if (methods.length > 0) {
-        if (newAttributes.length > 0) {
-          code += `,`;
-        }
-        code += `\n  methods = {`;
-        code += methods.map(method => this.generateMethodSchema(method)).join(',');
-        code += `\n  }`;
-      }
+    if (newAttributes.length > 0) {
+      code += `${className}:update_attributes_info({\n`;
+      
+      code += newAttributes.map(attr => this.generateAttributeInfo(attr)).join(',\n')
+      
       code += `\n})\n\n`;
     }
-    
-    const standardSetters = attributes.filter(attr => attr.hasStandardSetter === true || attr.hasStandardSetter === false);
-    if (standardSetters.length > 0) {
-      code += `${className}:generate_setters({ `;
-      code += standardSetters.map(attr => `'${attr.name}'`).join(', ');
-      code += ` })\n\n`;
-    }
-    
+
     const dictionarySetters = attributes.filter(attr => attr.dictionaryBase && attr.dictionaryBase.trim());
     if (dictionarySetters.length > 0) {
       code += `Dictionary:generate_setters_from_dictionaries(${className}, {`;
-      code += dictionarySetters.map(attr => `\n  ${attr.name} = "${attr.dictionaryBase}Dictionary.%s<${attr.dictionaryBase}Record>.${attr.dictionaryAttr}<${attr.type}>"`).join(',');
+      code += dictionarySetters.map(attr => {
+        const suffix = attr.dictionaryAttr ? `.${attr.dictionaryAttr}<${attr.type}>` : '';
+        return `\n  ${attr.name} = "${attr.dictionaryBase}Dictionary.%s<${attr.dictionaryBase}Record>${suffix}"`;
+      }).join(',');
       code += `\n})\n\n`;
     }
     
