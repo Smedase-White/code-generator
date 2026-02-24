@@ -27,11 +27,13 @@ export class LuaGenerator {
 
   generateAttributeInfo(attr) {
     let schema = `    ${attr.name} = {\n`;
-    schema += `      type = ${attr.type},\n`;
-    schema += `      name_ru = '${attr.nameRu || attr.name}'`;
+    schema += `      type = ${attr.type}`;
+    if (attr.nameRu) {
+      schema += `,\n      name_ru = '${attr.nameRu}'`;
+    }
     
     if (attr.selfAttr) {
-        schema += `,\n      self_attr = true`;
+      schema += `,\n      self_attr = true`;
     }
     
     if (attr.hasStandardSetter === true || attr.hasStandardSetter === false) {
@@ -124,11 +126,10 @@ export class LuaGenerator {
     
     code += `local ${className} = class('${className}', ${parentName || 'BaseClass'})\n\n`;
     
-    const newAttributes = attributes.filter(attr => !attr.fromParent);
-    if (newAttributes.length > 0) {
+    if (attributes.length > 0) {
       code += `${className}:update_attributes_info({\n`;
       
-      code += newAttributes.map(attr => this.generateAttributeInfo(attr)).join(',\n')
+      code += attributes.map(attr => this.generateAttributeInfo(attr)).join(',\n')
       
       code += `\n})\n\n`;
     }
@@ -143,6 +144,7 @@ export class LuaGenerator {
       code += `\n})\n\n`;
     }
     
+    const newAttributes = attributes.filter(attr => !attr.fromParent);
     if (newAttributes.length > 0) {
       code += `function ${className}.static:initialize_from_table(data)\n`;
 
