@@ -26,21 +26,21 @@ export class LuaGenerator {
   }
 
   generateAttributeInfo(attr) {
-    let schema = `    ${attr.name} = {\n`;
-    schema += `      type = ${attr.type}`;
+    let schema = `  ${attr.name} = {\n`;
+    schema += `    type = ${attr.type}`;
     if (attr.nameRu) {
-      schema += `,\n      name_ru = '${attr.nameRu}'`;
+      schema += `,\n    name_ru = '${attr.nameRu}'`;
     }
     
     if (attr.selfAttr) {
-      schema += `,\n      self_attr = true`;
+      schema += `,\n    self_attr = true`;
     }
     
     if (attr.hasStandardSetter === true || attr.hasStandardSetter === false) {
-      schema += `,\n      with_setters = true`;
+      schema += `,\n    with_setters = true`;
     }
     
-    schema += `\n    }`;
+    schema += `\n  }`;
     return schema;
   }
 
