@@ -454,7 +454,12 @@ export class Data {
     const blob = new Blob([jsonData], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     
-    const className = data.classType === 'dictionary' ? `${data.dictionary.dictBase}Dictionary` : data.base.className;
+    let className = '';
+    if (data.classType === 'dictionary') {
+      className = `${data.dictionary?.dictBase || ''}Dictionary`;
+    } else if (data.classType === 'base') {
+      className = data.base?.className || '';
+    }
     const fileName = `${className || 'class_data'}_config.json`;
     
     const a = document.createElement('a');
